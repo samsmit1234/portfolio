@@ -24,6 +24,14 @@ function detectIos() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
+/** iOS version from the UA (iPadOS reports as Mac but keeps "Version/x.y"). */
+function iosVersion(): number {
+  const m = navigator.userAgent.match(/OS (\d+)_(\d+)/) ?? navigator.userAgent.match(/Version\/(\d+)\.(\d+)/);
+  return m ? Number(m[1]) + Number(m[2]) / 100 : 0;
+}
+
+type IosMode = "none" | "safari" | "safari-old" | "installed";
+
 function isStandalone() {
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
@@ -39,7 +47,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   const [muted, setMuted] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
   const [connected, setConnected] = useState(true);
-  const [showIosHint, setShowIosHint] = useState(false);
+  const [iosMode, setIosMode] = useState<IosMode>("none");
   const wakeLock = useRef<WakeLockSentinel | null>(null);
   const alertOn = alertState === "on";
   const d = t(lang);
@@ -50,8 +58,11 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
       const saved = localStorage.getItem("nadi:lang");
       if (isLang(saved)) setLang(saved);
     } catch {}
-    const ios = detectIos();
-    setShowIosHint(ios && !isStandalone());
+    // iPhone only delivers web push to apps added to the Home Screen (iOS 16.4+).
+    if (detectIos()) {
+      if (isStandalone()) setIosMode("installed");
+      else setIosMode(iosVersion() >= 16.04 ? "safari" : "safari-old");
+    }
   }, []);
 
   useEffect(() => {
@@ -297,19 +308,45 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
 
       {order.status === "preparing" && (
         <section className={styles.actions}>
-          {alertState !== "on" ? (
-            <button className="btn btn-primary btn-xl" onClick={enableAlert} disabled={alertState === "enabling"}>
-              <BellIcon /> {alertState === "enabling" ? d.enabling : d.enableAlert}
-            </button>
-          ) : (
+          {alertState === "on" ? (
             <div className={styles.enabled}>
               <p className={styles.enabledTitle}>✓ {d.alertOn}</p>
               <p>{d.alertOnHint}</p>
               {pushState === "granted" && <p className="muted">{d.alertOnHintPush}</p>}
               {pushState === "denied" && <p className="muted">{d.notifDenied}</p>}
             </div>
+          ) : iosMode === "safari" ? (
+            <>
+              <div className={`card ${styles.install}`}>
+                <p className={styles.installTitle}>{d.iosTitle}</p>
+                <ol className={styles.steps}>
+                  <li>
+                    <span className={styles.stepIcon}><ShareIcon /></span>
+                    <span>{d.iosStep1}</span>
+                  </li>
+                  <li>
+                    <span className={styles.stepIcon}><AddIcon /></span>
+                    <span>{d.iosStep2}</span>
+                  </li>
+                  <li>
+                    <span className={styles.stepIcon}><BellIcon /></span>
+                    <span>{d.iosStep3}</span>
+                  </li>
+                </ol>
+              </div>
+              <button className="btn btn-lg" onClick={enableAlert} disabled={alertState === "enabling"}>
+                {d.iosKeepOpen}
+              </button>
+            </>
+          ) : (
+            <>
+              {iosMode === "installed" && <p className={styles.installed}>{d.installedHint}</p>}
+              <button className="btn btn-primary btn-xl" onClick={enableAlert} disabled={alertState === "enabling"}>
+                <BellIcon /> {alertState === "enabling" ? d.enabling : d.enableAlert}
+              </button>
+              {iosMode === "safari-old" && <p className={styles.iosHint}>{d.iosOld}</p>}
+            </>
           )}
-          {showIosHint && <p className={styles.iosHint}>{d.iosHint}</p>}
         </section>
       )}
 
@@ -317,6 +354,25 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
         <BrandMark size={16} color="var(--muted)" /> Nadi
       </footer>
     </main>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v12" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
+    </svg>
+  );
+}
+
+function AddIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <path d="M12 8v8M8 12h8" />
+    </svg>
   );
 }
 

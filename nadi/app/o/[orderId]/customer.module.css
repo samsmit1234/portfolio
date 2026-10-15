@@ -84,3 +84,18 @@
   margin-top: 8px; background: rgb(0 0 0 / 0.22); border-radius: 999px; padding: 10px 18px; font-weight: 700;
 }
 .stopBtn { margin-top: 8px; background: rgb(255 255 255 / 0.95); color: #1d1712; border-color: transparent; }
+
+/* ---------- iPhone: add to Home Screen ---------- */
+.install { padding: 18px; display: grid; gap: 14px; border-color: var(--brand); }
+.installTitle { font-weight: 800; font-size: 1.08rem; line-height: 1.35; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
+.steps li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; line-height: 1.4; font-weight: 600; counter-increment: step; }
+.stepIcon {
+  position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--brand-soft); color: var(--brand);
+}
+.stepIcon::after {
+  content: counter(step); position: absolute; top: -6px; inset-inline-start: -6px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-size: 0.72rem; font-weight: 800; display: grid; place-items: center;
+}
+.installed { background: var(--ready-soft); border-radius: 14px; padding: 12px 14px; font-weight: 700; text-align: center; }
