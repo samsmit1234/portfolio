@@ -314,6 +314,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
               <p>{d.alertOnHint}</p>
               {pushState === "granted" && <p className="muted">{d.alertOnHintPush}</p>}
               {pushState === "denied" && <p className="muted">{d.notifDenied}</p>}
+              {pushState === "error" && <p className="error">{d.pushError}</p>}
             </div>
           ) : iosMode === "safari" ? (
             <>

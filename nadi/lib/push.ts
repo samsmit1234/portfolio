@@ -54,13 +54,18 @@ export async function sendReadyPush(opts: {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           payload,
-          { TTL: 60 * 30, urgency: "high", topic: `order${opts.orderId.replace(/-/g, "").slice(0, 24)}` },
+          // No `topic` header: Apple's push service rejects it with 400.
+          { TTL: 60 * 30, urgency: "high" },
         );
         sent++;
       } catch (err) {
         const code = err instanceof WebPushError ? err.statusCode : 0;
         if (code === 404 || code === 410) gone.push(s.id);
-        else console.error("web-push failed", code, (err as Error).message);
+        else {
+          const host = new URL(s.endpoint).host;
+          const body = err instanceof WebPushError ? err.body : "";
+          console.error("web-push failed", code, host, body || (err as Error).message);
+        }
       }
     }),
   );
