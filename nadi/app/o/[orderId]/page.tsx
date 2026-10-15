@@ -11,9 +11,9 @@ export async function generateMetadata({ params }: { params: Promise<{ orderId: 
   return {
     title: order ? `#${order.number}` : "Votre commande",
     robots: { index: false, follow: false },
-    // Home Screen icon (iPhone) reopens this order.
-    manifest: order ? `/o/${order.id}/manifest.webmanifest` : undefined,
-    appleWebApp: { capable: true, title: order ? `Nadi #${order.number}` : "Nadi", statusBarStyle: "default" },
+    // Adding to the Home Screen installs the one customer app (/c), opening on this order.
+    manifest: order ? `/c/manifest.webmanifest?o=${order.id}` : "/c/manifest.webmanifest",
+    appleWebApp: { capable: true, title: "Nadi", statusBarStyle: "default" },
   };
 }
 

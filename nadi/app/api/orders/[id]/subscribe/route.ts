@@ -23,6 +23,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     typeof p256dh !== "string" || p256dh.length > 200 ||
     typeof auth !== "string" || auth.length > 100
   ) {
+    console.error("subscribe: bad subscription", typeof endpoint === "string" ? endpoint.slice(0, 40) : typeof endpoint);
     return NextResponse.json({ error: "bad_subscription" }, { status: 400 });
   }
 
@@ -42,7 +43,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const { error } = await admin
     .from("push_subscriptions")
     .upsert({ order_id: id, endpoint, p256dh, auth }, { onConflict: "order_id,endpoint" });
-  if (error) return NextResponse.json({ error: "db" }, { status: 500 });
+  if (error) {
+    console.error("subscribe: db error", error.message);
+    return NextResponse.json({ error: "db" }, { status: 500 });
+  }
+  console.log("subscribe: ok", new URL(endpoint).host);
 
   return NextResponse.json({ ok: true });
 }

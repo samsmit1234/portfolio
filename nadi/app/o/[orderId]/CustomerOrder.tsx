@@ -1,43 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { dir, isLang, t } from "@/lib/i18n";
 import { isAudioUnlocked, startAlarm, stopAlarm, unlockAudio } from "@/lib/sound";
 import type { Lang, PublicOrder } from "@/lib/types";
+import {
+  getPushSubscription,
+  iosVersion,
+  isIos,
+  isStandalone,
+  linkOrderToPush,
+  pushSupported,
+  rememberOrder,
+} from "@/lib/pushClient";
 import { BrandMark } from "@/components/BrandMark";
 import styles from "./customer.module.css";
 
 type AlertState = "idle" | "enabling" | "on";
 type PushState = "unknown" | "unsupported" | "granted" | "denied" | "error";
 
-function urlBase64ToUint8Array(base64: string) {
-  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
-  const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
-  const out = new Uint8Array(new ArrayBuffer(raw.length));
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
-
-function detectIos() {
-  if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-
-/** iOS version from the UA (iPadOS reports as Mac but keeps "Version/x.y"). */
-function iosVersion(): number {
-  const m = navigator.userAgent.match(/OS (\d+)_(\d+)/) ?? navigator.userAgent.match(/Version\/(\d+)\.(\d+)/);
-  return m ? Number(m[1]) + Number(m[2]) / 100 : 0;
-}
-
 type IosMode = "none" | "safari" | "safari-old" | "installed";
-
-function isStandalone() {
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
 
 export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrder; vapidPublicKey: string }) {
   const [order, setOrder] = useState(initial);
@@ -59,11 +43,22 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
       if (isLang(saved)) setLang(saved);
     } catch {}
     // iPhone only delivers web push to apps added to the Home Screen (iOS 16.4+).
-    if (detectIos()) {
+    if (isIos()) {
       if (isStandalone()) setIosMode("installed");
       else setIosMode(iosVersion() >= 16.04 ? "safari" : "safari-old");
     }
-  }, []);
+    // Inside the installed app, keep this order in "my orders" (/c) and, if
+    // notifications were already allowed, link it to push right away.
+    if (isStandalone()) {
+      rememberOrder(initial.id);
+      if (pushSupported(vapidPublicKey) && Notification.permission === "granted") {
+        getPushSubscription(vapidPublicKey)
+          .then((sub) => linkOrderToPush(initial.id, sub))
+          .then((ok) => ok && setPushState("granted"))
+          .catch(() => {});
+      }
+    }
+  }, [initial.id, vapidPublicKey]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -189,8 +184,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
     unlockAudio();
     void requestWakeLock();
 
-    const pushCapable =
-      !!vapidPublicKey && "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+    const pushCapable = pushSupported(vapidPublicKey);
     const permissionPromise = pushCapable ? Notification.requestPermission() : null;
 
     setAlertState("enabling");
@@ -207,20 +201,8 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
         setAlertState("on");
         return;
       }
-      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      await navigator.serviceWorker.ready;
-      const sub =
-        (await reg.pushManager.getSubscription()) ??
-        (await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        }));
-      const res = await fetch(`/api/orders/${order.id}/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
-      });
-      setPushState(res.ok ? "granted" : "error");
+      const sub = await getPushSubscription(vapidPublicKey);
+      setPushState((await linkOrderToPush(order.id, sub)) ? "granted" : "error");
     } catch (err) {
       console.error(err);
       setPushState("error");
@@ -254,9 +236,16 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
         )}
         <span>{order.restaurant_name}</span>
       </div>
-      <button className={`btn btn-ghost ${styles.lang}`} onClick={switchLang}>
-        {lang === "fr" ? "العربية" : "Français"}
-      </button>
+      <div className={styles.headerActions}>
+        {iosMode === "installed" && (
+          <Link href="/c" className={`btn btn-ghost ${styles.lang}`}>
+            {d.myOrders}
+          </Link>
+        )}
+        <button className={`btn btn-ghost ${styles.lang}`} onClick={switchLang}>
+          {lang === "fr" ? "العربية" : "Français"}
+        </button>
+      </div>
     </header>
   );
 
@@ -334,6 +323,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
                     <span>{d.iosStep3}</span>
                   </li>
                 </ol>
+                <p className={styles.alreadyApp}>{d.alreadyApp}</p>
               </div>
               <button className="btn btn-lg" onClick={enableAlert} disabled={alertState === "enabling"}>
                 {d.iosKeepOpen}
