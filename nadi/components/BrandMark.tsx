@@ -2,7 +2,7 @@
 export function BrandMark({
   size = 32,
   color = "currentColor",
-  accent = "#FFF7EC",
+  accent = "#0e0d0b",
 }: {
   size?: number;
   color?: string;

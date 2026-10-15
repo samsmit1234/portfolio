@@ -17,11 +17,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ size: string }>
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#FF5A36",
+          background: "#0e0d0b",
           borderRadius: maskable ? 0 : size * 0.22,
         }}
       >
-        <BrandMark size={size - pad * 2} color="#FFF7EC" accent="#FF5A36" />
+        <BrandMark size={size - pad * 2} color="#f0893d" accent="#0e0d0b" />
       </div>
     ),
     { width: size, height: size, headers: { "Cache-Control": "public, max-age=604800, immutable" } },

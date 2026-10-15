@@ -14,7 +14,7 @@
 .toolbar { display: flex; gap: 12px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
 .createForm { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .createLabel { font-weight: 800; font-size: 1.1rem; }
-.numberInput { width: 140px; font-size: 1.6rem; font-weight: 900; text-align: center; min-height: 56px; }
+.numberInput { width: 140px; font-family: var(--cond); font-size: 1.8rem; font-weight: 600; text-align: center; min-height: 56px; }
 .errorBar { background: var(--brand-soft); padding: 10px 14px; border-radius: 12px; }
 
 .columns { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
@@ -34,9 +34,10 @@
   padding: 14px; display: grid; gap: 12px;
 }
 .orderReady { border-color: var(--ready); background: var(--ready-soft); }
+.order:not(.orderReady):not(.orderDone) { border-color: var(--line); }
 .orderDone { box-shadow: none; opacity: 0.7; padding: 10px 14px; }
 .orderHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.orderNumber { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.orderNumber { font-family: var(--cond); font-size: 2.6rem; font-weight: 600; letter-spacing: 0; line-height: 1; font-variant-numeric: tabular-nums; }
 .orderDone .orderNumber { font-size: 1.3rem; }
 .orderActions { display: flex; gap: 8px; }
 .readyBtn { flex: 1; }

@@ -4,4 +4,4 @@
 .logo { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
 .form { padding: 24px 20px; display: grid; gap: 16px; margin-top: 8vh; }
 .label { font-weight: 800; font-size: 1.25rem; text-align: center; }
-.numberInput { font-size: 3rem; font-weight: 900; text-align: center; min-height: 88px; letter-spacing: 0.05em; }
+.numberInput { font-family: var(--cond); font-size: 3.2rem; font-weight: 600; text-align: center; min-height: 88px; letter-spacing: 0.05em; }

@@ -21,8 +21,9 @@
 .ticket { padding: 28px 20px; text-align: center; display: grid; gap: 12px; justify-items: center; }
 .ticketLabel { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.85rem; font-weight: 700; color: var(--muted); }
 .number {
-  font-size: clamp(5rem, 30vw, 9rem);
-  font-weight: 900;
+  font-family: var(--cond);
+  font-size: clamp(6rem, 36vw, 10rem);
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
@@ -58,7 +59,7 @@
   position: fixed; inset: 0; z-index: 10;
   display: grid; place-items: center; text-align: center;
   padding: 24px 16px;
-  color: #fff;
+  color: var(--ready-ink);
   background: var(--ready);
   animation: flash 0.9s steps(1, end) infinite;
   cursor: pointer;
@@ -66,8 +67,8 @@
 }
 .readyStill { animation: none; }
 @keyframes flash {
-  0% { background: #12a150; }
-  50% { background: #ff5a36; }
+  0% { background: #3fbf7f; }
+  50% { background: #f0893d; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ready { animation: none; }
@@ -75,15 +76,15 @@
 .readyInner { display: grid; gap: 14px; justify-items: center; max-width: 520px; }
 .readyLabel { font-weight: 700; opacity: 0.9; letter-spacing: 0.06em; text-transform: uppercase; }
 .readyNumber {
-  font-size: clamp(6rem, 40vw, 14rem); font-weight: 900; line-height: 0.95; letter-spacing: -0.04em;
+  font-family: var(--cond); font-size: clamp(7rem, 46vw, 15rem); font-weight: 700; line-height: 0.95; letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
 }
 .readyTitle { font-size: clamp(1.8rem, 8vw, 3rem); font-weight: 900; }
 .readySub { font-size: 1.2rem; font-weight: 600; opacity: 0.95; }
 .tapHint {
-  margin-top: 8px; background: rgb(0 0 0 / 0.22); border-radius: 999px; padding: 10px 18px; font-weight: 700;
+  margin-top: 8px; background: rgb(14 13 11 / 0.85); color: #efe8dc; border-radius: 999px; padding: 10px 18px; font-weight: 700;
 }
-.stopBtn { margin-top: 8px; background: rgb(255 255 255 / 0.95); color: #1d1712; border-color: transparent; }
+.stopBtn { margin-top: 8px; background: #0e0d0b; color: #efe8dc; border-color: transparent; }
 
 /* ---------- iPhone: add to Home Screen ---------- */
 .install { padding: 18px; display: grid; gap: 14px; border-color: var(--brand); }
