@@ -1,0 +1,6 @@
+.page { min-height: 100dvh; display: grid; align-content: center; justify-items: center; gap: 20px; padding: 24px 16px; }
+.top { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; }
+.card { width: 100%; max-width: 400px; padding: 24px; display: grid; gap: 16px; }
+.card h1 { font-size: 1.5rem; }
+.info { background: var(--ready-soft); padding: 10px 12px; border-radius: 10px; }
+.link { background: none; border: 0; padding: 0; color: var(--brand); font-weight: 700; cursor: pointer; text-decoration: underline; }

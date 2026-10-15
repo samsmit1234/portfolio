@@ -1,0 +1,254 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getBrowserSupabase } from "@/lib/supabase/client";
+import { t } from "@/lib/i18n";
+import type { Lang, Order, OrderStatus } from "@/lib/types";
+import { QrModal } from "@/components/QrModal";
+import styles from "./dashboard.module.css";
+
+function nextNumber(orders: Order[]) {
+  const nums = orders.map((o) => parseInt(o.number, 10)).filter((n) => Number.isFinite(n));
+  return String(nums.length ? Math.max(...nums) + 1 : 1);
+}
+
+function sortOrders(list: Order[]) {
+  return [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export function OrdersBoard({
+  restaurantId,
+  lang,
+  initialOrders,
+  siteUrl,
+}: {
+  restaurantId: string;
+  lang: Lang;
+  initialOrders: Order[];
+  siteUrl: string;
+}) {
+  const d = t(lang);
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [number, setNumber] = useState(() => nextNumber(initialOrders));
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [qr, setQr] = useState<{ url: string; big?: string; title: string; subtitle?: string } | null>(null);
+  const [base, setBase] = useState(siteUrl);
+  const numberTouched = useRef(false);
+
+  useEffect(() => {
+    if (!siteUrl) setBase(window.location.origin);
+  }, [siteUrl]);
+
+  const upsert = useCallback((o: Order) => {
+    setOrders((list) => sortOrders([o, ...list.filter((x) => x.id !== o.id)]));
+  }, []);
+
+  // Live updates from other staff devices.
+  useEffect(() => {
+    const supabase = getBrowserSupabase();
+    const channel = supabase
+      .channel(`restaurant:${restaurantId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `restaurant_id=eq.${restaurantId}` },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const id = (payload.old as Partial<Order>).id;
+            setOrders((list) => list.filter((x) => x.id !== id));
+          } else {
+            upsert(payload.new as Order);
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [restaurantId, upsert]);
+
+  // Keep the suggested next number fresh until staff types their own.
+  useEffect(() => {
+    if (!numberTouched.current) setNumber(nextNumber(orders));
+  }, [orders]);
+
+  const orderUrl = (id: string) => `${base}/o/${id}`;
+
+  const create = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = number.trim();
+    if (!n) return;
+    if (orders.some((o) => o.status !== "done" && o.number.toLowerCase() === n.toLowerCase())) {
+      setError(d.duplicateNumber);
+      return;
+    }
+    setError(null);
+    setCreating(true);
+    const { data, error } = await getBrowserSupabase()
+      .from("orders")
+      .insert({ restaurant_id: restaurantId, number: n })
+      .select("*")
+      .single();
+    setCreating(false);
+    if (error || !data) {
+      setError(error?.message ?? "Error");
+      return;
+    }
+    upsert(data as Order);
+    numberTouched.current = false;
+    setQr({ url: orderUrl(data.id), big: data.number, title: d.qrTitle });
+  };
+
+  const setStatus = async (o: Order, status: OrderStatus) => {
+    setBusyId(o.id);
+    const prev = o;
+    upsert({ ...o, status, ready_at: status === "ready" ? new Date().toISOString() : status === "preparing" ? null : o.ready_at });
+    const res = await fetch(`/api/orders/${o.id}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) {
+      upsert(prev);
+      setError(`HTTP ${res.status}`);
+    }
+    setBusyId(null);
+  };
+
+  const groups = useMemo(
+    () => ({
+      preparing: orders.filter((o) => o.status === "preparing").reverse(), // oldest first: FIFO
+      ready: orders.filter((o) => o.status === "ready"),
+      done: orders.filter((o) => o.status === "done").slice(0, 30),
+    }),
+    [orders],
+  );
+
+  const time = (iso: string) =>
+    new Date(iso).toLocaleTimeString(lang === "ar" ? "ar-MA" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <main className={styles.main}>
+      <section className={styles.toolbar}>
+        <form onSubmit={create} className={styles.createForm}>
+          <label className={styles.createLabel} htmlFor="order-number">{d.newOrder}</label>
+          <input
+            id="order-number"
+            className={`input ${styles.numberInput}`}
+            value={number}
+            onChange={(e) => {
+              numberTouched.current = true;
+              setNumber(e.target.value);
+            }}
+            maxLength={12}
+            inputMode="numeric"
+            aria-label={d.orderNumber}
+            dir="ltr"
+          />
+          <button className="btn btn-primary btn-lg" disabled={creating || !number.trim()}>
+            + {d.create}
+          </button>
+        </form>
+        <button
+          className="btn"
+          onClick={() => setQr({ url: `${base}/r/${restaurantId}`, title: d.counterQr, subtitle: d.counterQrHint })}
+        >
+          {d.counterQr}
+        </button>
+      </section>
+      {error && <p className={`error ${styles.errorBar}`}>{error}</p>}
+
+      <div className={styles.columns}>
+        <Column title={d.colPreparing} count={groups.preparing.length} tone="wait">
+          {groups.preparing.map((o) => (
+            <article key={o.id} className={styles.order}>
+              <div className={styles.orderHead}>
+                <span className={styles.orderNumber} dir="ltr">{o.number}</span>
+                <span className="muted">{time(o.created_at)}</span>
+              </div>
+              <div className={styles.orderActions}>
+                <button
+                  className={`btn btn-ready btn-xl ${styles.readyBtn}`}
+                  disabled={busyId === o.id}
+                  onClick={() => setStatus(o, "ready")}
+                >
+                  {d.markReady}
+                </button>
+                <button className="btn" onClick={() => setQr({ url: orderUrl(o.id), big: o.number, title: d.qrTitle })}>
+                  {d.showQr}
+                </button>
+              </div>
+            </article>
+          ))}
+          {!groups.preparing.length && <p className={styles.empty}>{d.empty}</p>}
+        </Column>
+
+        <Column title={d.colReady} count={groups.ready.length} tone="ready">
+          {groups.ready.map((o) => (
+            <article key={o.id} className={`${styles.order} ${styles.orderReady}`}>
+              <div className={styles.orderHead}>
+                <span className={styles.orderNumber} dir="ltr">{o.number}</span>
+                <span className="muted">{o.ready_at ? time(o.ready_at) : ""}</span>
+              </div>
+              <div className={styles.orderActions}>
+                <button className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={busyId === o.id} onClick={() => setStatus(o, "done")}>
+                  {d.markDone}
+                </button>
+                <button className="btn" disabled={busyId === o.id} onClick={() => setStatus(o, "preparing")}>
+                  {d.undo}
+                </button>
+              </div>
+            </article>
+          ))}
+          {!groups.ready.length && <p className={styles.empty}>{d.empty}</p>}
+        </Column>
+
+        <Column title={d.colDone} count={groups.done.length} tone="done">
+          {groups.done.map((o) => (
+            <article key={o.id} className={`${styles.order} ${styles.orderDone}`}>
+              <div className={styles.orderHead}>
+                <span className={styles.orderNumber} dir="ltr">{o.number}</span>
+                <span className="muted">{time(o.created_at)}</span>
+              </div>
+            </article>
+          ))}
+          {!groups.done.length && <p className={styles.empty}>{d.empty}</p>}
+        </Column>
+      </div>
+
+      {qr && (
+        <QrModal
+          url={qr.url}
+          big={qr.big}
+          title={qr.title}
+          subtitle={qr.subtitle}
+          onClose={() => setQr(null)}
+          closeLabel={d.close}
+          printLabel={d.print}
+        />
+      )}
+    </main>
+  );
+}
+
+function Column({
+  title,
+  count,
+  tone,
+  children,
+}: {
+  title: string;
+  count: number;
+  tone: "wait" | "ready" | "done";
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={styles.column} data-tone={tone}>
+      <h2 className={styles.columnTitle}>
+        <span className={styles.toneDot} /> {title} <span className={styles.count}>{count}</span>
+      </h2>
+      <div className={styles.columnBody}>{children}</div>
+    </section>
+  );
+}

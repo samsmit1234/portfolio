@@ -1,0 +1,143 @@
+import type { Lang } from "./types";
+
+export const LANGS: Lang[] = ["fr", "ar"];
+export const dir = (lang: Lang) => (lang === "ar" ? "rtl" : "ltr");
+
+const fr = {
+  // Customer
+  orderLabel: "Commande",
+  statusPreparing: "En préparation",
+  statusReady: "Votre commande est prête !",
+  statusDone: "Commande récupérée. Bon appétit !",
+  preparingHint: "Nous vous prévenons dès qu'elle est prête.",
+  enableAlert: "Activer l'alerte",
+  enabling: "Activation…",
+  alertOn: "Alerte activée",
+  alertOnHint: "Gardez cette page ouverte : le téléphone sonnera et vibrera.",
+  alertOnHintPush: "Vous recevrez aussi une notification si la page est fermée.",
+  notifDenied: "Notifications refusées — gardez cette page ouverte pour être alerté.",
+  iosHint:
+    "iPhone : gardez cette page ouverte et l'écran allumé. Pour recevoir une notification, ajoutez l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil).",
+  readyCta: "Allez au comptoir",
+  stopSound: "Couper le son",
+  tapToHear: "Touchez l'écran pour activer le son",
+  orderNotFound: "Commande introuvable ou expirée.",
+  offline: "Connexion perdue — reconnexion…",
+  pushTitle: "Commande prête !",
+  // Counter mode
+  enterNumber: "Entrez votre numéro de commande",
+  find: "Suivre ma commande",
+  notFoundNumber: "Aucune commande en cours avec ce numéro.",
+  // Staff
+  login: "Connexion",
+  signup: "Créer un compte",
+  email: "E-mail",
+  password: "Mot de passe",
+  noAccount: "Pas encore de compte ?",
+  haveAccount: "Déjà un compte ?",
+  checkEmail: "Vérifiez votre e-mail pour confirmer le compte, puis connectez-vous.",
+  logout: "Déconnexion",
+  dashboard: "Commandes",
+  settings: "Réglages",
+  newOrder: "Nouvelle commande",
+  orderNumber: "N° de commande",
+  create: "Créer",
+  colPreparing: "En préparation",
+  colReady: "Prêtes",
+  colDone: "Récupérées",
+  markReady: "Prête",
+  markDone: "Récupérée",
+  undo: "Annuler",
+  showQr: "QR",
+  qrTitle: "Scannez pour être alerté",
+  close: "Fermer",
+  print: "Imprimer",
+  counterQr: "QR comptoir",
+  counterQrHint: "Un seul QR fixe : le client scanne puis tape son numéro.",
+  empty: "Rien ici.",
+  restaurantName: "Nom du restaurant",
+  logo: "Logo",
+  alertSound: "Son d'alerte",
+  language: "Langue",
+  save: "Enregistrer",
+  saved: "Enregistré",
+  preview: "Écouter",
+  soundChime: "Carillon",
+  soundBeep: "Bip",
+  soundSiren: "Sirène",
+  duplicateNumber: "Ce numéro est déjà en cours.",
+} as const;
+
+export type Dict = { [K in keyof typeof fr]: string };
+
+const ar: Dict = {
+  orderLabel: "الطلب",
+  statusPreparing: "قيد التحضير",
+  statusReady: "طلبك جاهز!",
+  statusDone: "تم استلام الطلب. بالهناء والشفاء!",
+  preparingHint: "سننبهك فور جاهزيته.",
+  enableAlert: "تفعيل التنبيه",
+  enabling: "جارٍ التفعيل…",
+  alertOn: "التنبيه مفعّل",
+  alertOnHint: "أبقِ هذه الصفحة مفتوحة: سيرنّ الهاتف ويهتز.",
+  alertOnHintPush: "ستصلك أيضًا إشعارات إذا أُغلقت الصفحة.",
+  notifDenied: "تم رفض الإشعارات — أبقِ هذه الصفحة مفتوحة لتصلك التنبيهات.",
+  iosHint:
+    "آيفون: أبقِ هذه الصفحة مفتوحة والشاشة مضاءة. لتلقي الإشعارات، أضف التطبيق إلى الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية).",
+  readyCta: "تفضّل إلى الشباك",
+  stopSound: "إيقاف الصوت",
+  tapToHear: "المس الشاشة لتشغيل الصوت",
+  orderNotFound: "الطلب غير موجود أو منتهي الصلاحية.",
+  offline: "انقطع الاتصال — جارٍ إعادة الاتصال…",
+  pushTitle: "طلبك جاهز!",
+  enterNumber: "أدخل رقم طلبك",
+  find: "تتبّع طلبي",
+  notFoundNumber: "لا يوجد طلب جارٍ بهذا الرقم.",
+  login: "تسجيل الدخول",
+  signup: "إنشاء حساب",
+  email: "البريد الإلكتروني",
+  password: "كلمة المرور",
+  noAccount: "ليس لديك حساب؟",
+  haveAccount: "لديك حساب؟",
+  checkEmail: "تحقق من بريدك لتأكيد الحساب ثم سجّل الدخول.",
+  logout: "تسجيل الخروج",
+  dashboard: "الطلبات",
+  settings: "الإعدادات",
+  newOrder: "طلب جديد",
+  orderNumber: "رقم الطلب",
+  create: "إنشاء",
+  colPreparing: "قيد التحضير",
+  colReady: "جاهزة",
+  colDone: "تم الاستلام",
+  markReady: "جاهز",
+  markDone: "تم الاستلام",
+  undo: "تراجع",
+  showQr: "QR",
+  qrTitle: "امسح الرمز لتصلك التنبيهات",
+  close: "إغلاق",
+  print: "طباعة",
+  counterQr: "رمز الشباك",
+  counterQrHint: "رمز ثابت واحد: يمسحه الزبون ثم يكتب رقمه.",
+  empty: "لا شيء هنا.",
+  restaurantName: "اسم المطعم",
+  logo: "الشعار",
+  alertSound: "صوت التنبيه",
+  language: "اللغة",
+  save: "حفظ",
+  saved: "تم الحفظ",
+  preview: "استماع",
+  soundChime: "جرس",
+  soundBeep: "صفارة",
+  soundSiren: "إنذار",
+  duplicateNumber: "هذا الرقم قيد التحضير بالفعل.",
+};
+
+const dicts: Record<Lang, Dict> = { fr, ar };
+
+export function t(lang: Lang): Dict {
+  return dicts[lang] ?? fr;
+}
+
+export function isLang(v: unknown): v is Lang {
+  return v === "fr" || v === "ar";
+}

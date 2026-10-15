@@ -1,0 +1,52 @@
+.shell { min-height: 100dvh; }
+
+.nav {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+}
+.navName { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navLinks { display: flex; gap: 2px; flex-wrap: wrap; }
+
+.main { padding: 16px; max-width: 1280px; margin: 0 auto; display: grid; gap: 16px; }
+
+.toolbar { display: flex; gap: 12px; align-items: end; justify-content: space-between; flex-wrap: wrap; }
+.createForm { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.createLabel { font-weight: 800; font-size: 1.1rem; }
+.numberInput { width: 140px; font-size: 1.6rem; font-weight: 900; text-align: center; min-height: 56px; }
+.errorBar { background: var(--brand-soft); padding: 10px 14px; border-radius: 12px; }
+
+.columns { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+@media (max-width: 960px) { .columns { grid-template-columns: 1fr; } }
+
+.column { display: grid; gap: 10px; }
+.columnTitle { display: flex; align-items: center; gap: 8px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.toneDot { width: 10px; height: 10px; border-radius: 50%; background: var(--wait); }
+.column[data-tone="ready"] .toneDot { background: var(--ready); }
+.column[data-tone="done"] .toneDot { background: var(--muted); }
+.count { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-size: 0.85rem; }
+.columnBody { display: grid; gap: 10px; }
+.empty { color: var(--muted); padding: 18px; text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); }
+
+.order {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px; display: grid; gap: 12px;
+}
+.orderReady { border-color: var(--ready); background: var(--ready-soft); }
+.orderDone { box-shadow: none; opacity: 0.7; padding: 10px 14px; }
+.orderHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.orderNumber { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.orderDone .orderNumber { font-size: 1.3rem; }
+.orderActions { display: flex; gap: 8px; }
+.readyBtn { flex: 1; }
+
+/* ---------- Settings ---------- */
+.settings { padding: 16px; max-width: 560px; margin: 0 auto; }
+.settingsCard { padding: 22px; display: grid; gap: 18px; }
+.logoRow { display: flex; align-items: center; gap: 14px; }
+.logoPreview { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; border: 1px solid var(--line); background: var(--bg); display: grid; place-items: center; }
+.soundRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.choice { display: inline-flex; align-items: center; gap: 8px; }
+.choice[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+.saveRow { display: flex; align-items: center; gap: 12px; }

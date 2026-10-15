@@ -1,0 +1,90 @@
+:root {
+  --bg: #fff7ec;
+  --surface: #ffffff;
+  --ink: #1d1712;
+  --muted: #6f6257;
+  --line: #eadfd2;
+  --brand: #ff5a36;
+  --brand-ink: #ffffff;
+  --brand-soft: #ffe4da;
+  --ready: #12a150;
+  --ready-soft: #dcf5e6;
+  --wait: #f2a20c;
+  --wait-soft: #fdf0d3;
+  --danger: #c62828;
+  --radius: 18px;
+  --shadow: 0 1px 2px rgb(60 30 10 / 0.06), 0 8px 24px rgb(60 30 10 / 0.08);
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic",
+    "Geeza Pro", Tahoma, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17120e;
+    --surface: #221b16;
+    --ink: #f6eee6;
+    --muted: #b3a597;
+    --line: #3a2f27;
+    --brand-soft: #4a2418;
+    --ready-soft: #133a24;
+    --wait-soft: #3d2f0f;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
+}
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; line-height: 1.15; }
+p { margin: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 12px; padding: 10px 16px; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: transform 0.06s ease, background 0.15s ease;
+  min-height: 44px;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+.btn-primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.btn-ready { background: var(--ready); border-color: var(--ready); color: #fff; }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-lg { font-size: 1.15rem; padding: 14px 22px; min-height: 56px; border-radius: 16px; }
+.btn-xl { font-size: 1.35rem; padding: 18px 26px; min-height: 68px; border-radius: 20px; width: 100%; }
+
+.input {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+  padding: 12px 14px; min-height: 48px; outline: none;
+}
+.input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.field { display: grid; gap: 6px; font-weight: 600; font-size: 0.92rem; }
+.field .input { font-weight: 400; font-size: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.muted { color: var(--muted); }
+.error { color: var(--danger); font-weight: 600; }
+.brand-row { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; }
+.brand-row .dot { color: var(--brand); }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
+
+/* Printing a QR: only the QR sheet is printed. */
+@media print {
+  body:has(.qr-print) * { visibility: hidden; }
+  body:has(.qr-print) .qr-print, body:has(.qr-print) .qr-print * { visibility: visible; }
+  body:has(.qr-print) .qr-print { position: absolute; inset: 0 0 auto 0; margin: 0 auto; }
+}
