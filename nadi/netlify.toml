@@ -7,3 +7,8 @@
 [build.environment]
   NODE_VERSION = "22"
   NEXT_TELEMETRY_DISABLED = "1"
+
+# Netlify's Next.js runtime (server pages, API routes, proxy). Listed explicitly
+# because the site was first created from a branch without Next.js.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
