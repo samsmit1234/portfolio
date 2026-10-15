@@ -26,6 +26,8 @@ export async function sendReadyPush(opts: {
   restaurantName: string;
   lang: Lang;
   baseUrl: string;
+  /** A repeat of the alert while the order waits at the counter. */
+  reminder?: boolean;
 }) {
   if (!configure()) return { sent: 0, removed: 0, skipped: "vapid-not-configured" as const };
 
@@ -39,7 +41,7 @@ export async function sendReadyPush(opts: {
   const d = t(opts.lang);
   const payload = JSON.stringify({
     title: `${d.pushTitle} #${opts.number}`,
-    body: `${opts.restaurantName} — ${d.readyCta}`,
+    body: `${opts.reminder ? `${d.reminderPrefix} ` : ""}${opts.restaurantName} — ${d.readyCta}`,
     url: `${opts.baseUrl}/o/${opts.orderId}`,
     tag: `order-${opts.orderId}`,
     dir: opts.lang === "ar" ? "rtl" : "ltr",

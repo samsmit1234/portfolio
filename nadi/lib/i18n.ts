@@ -32,6 +32,7 @@ const fr = {
   orderNotFound: "Commande introuvable ou expirée.",
   offline: "Connexion perdue — reconnexion…",
   pushTitle: "Commande prête !",
+  reminderPrefix: "Rappel :",
   // Customer app (/c)
   appTitle: "Mes commandes",
   scan: "Scanner une commande",
@@ -118,6 +119,7 @@ const ar: Dict = {
   orderNotFound: "الطلب غير موجود أو منتهي الصلاحية.",
   offline: "انقطع الاتصال — جارٍ إعادة الاتصال…",
   pushTitle: "طلبك جاهز!",
+  reminderPrefix: "تذكير:",
   appTitle: "طلباتي",
   scan: "مسح طلب",
   scanHint: "وجّه الكاميرا نحو رمز QR الخاص بطلبك",
