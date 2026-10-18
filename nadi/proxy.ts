@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { safeNext } from "@/lib/safeNext";
 
 /** Refreshes the Supabase session cookie and guards the staff dashboard. */
 export async function proxy(request: NextRequest) {
@@ -31,9 +32,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (user && path === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    // Already signed in: continue where the login was meant to lead (e.g. /join/<token>).
+    return NextResponse.redirect(new URL(safeNext(request.nextUrl.searchParams.get("next")), request.url));
   }
   return response;
 }

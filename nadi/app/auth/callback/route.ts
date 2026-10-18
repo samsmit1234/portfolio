@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSupabase } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/safeNext";
 
 /**
  * Landing point of Supabase email links (sign-up confirmation, password reset).
@@ -8,9 +9,8 @@ import { getServerSupabase } from "@/lib/supabase/server";
 export async function GET(req: NextRequest) {
   const url = req.nextUrl;
   const code = url.searchParams.get("code");
-  const nextParam = url.searchParams.get("next") ?? "/dashboard";
   // Only same-site paths: never redirect to another origin ("//evil.com").
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/dashboard";
+  const next = safeNext(url.searchParams.get("next"));
 
   if (code) {
     const supabase = await getServerSupabase();

@@ -1,6 +1,7 @@
 export type OrderStatus = "preparing" | "ready" | "done";
 export type AlertSound = "chime" | "beep" | "siren";
 export type Lang = "fr" | "ar" | "en";
+export type StaffRole = "owner" | "staff";
 
 export interface Restaurant {
   id: string;

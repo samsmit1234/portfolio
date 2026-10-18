@@ -12,6 +12,7 @@ export function QrModal({
   onClose,
   closeLabel,
   printLabel,
+  onPrimaryAction,
 }: {
   url: string;
   title: string;
@@ -20,6 +21,8 @@ export function QrModal({
   onClose: () => void;
   closeLabel: string;
   printLabel: string;
+  /** Replaces "Print" (e.g. "Copy link"); the label comes from printLabel. */
+  onPrimaryAction?: () => void;
 }) {
   const [svg, setSvg] = useState("");
 
@@ -44,7 +47,7 @@ export function QrModal({
         {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
         <p className={styles.url} dir="ltr">{url}</p>
         <div className={`${styles.actions} no-print`}>
-          <button className="btn" onClick={() => window.print()}>{printLabel}</button>
+          <button className="btn" onClick={onPrimaryAction ?? (() => window.print())}>{printLabel}</button>
           <button className="btn btn-primary" onClick={onClose} autoFocus>{closeLabel}</button>
         </div>
       </div>

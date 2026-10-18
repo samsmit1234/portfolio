@@ -15,7 +15,13 @@ type Mode = "login" | "signup" | "reset";
 /** Where Supabase email links (confirm, reset) land: /auth/callback exchanges the code. */
 const callbackUrl = (next: string) => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
-export function LoginForm({ linkExpired: linkExpiredAtLoad = false }: { linkExpired?: boolean }) {
+export function LoginForm({
+  linkExpired: linkExpiredAtLoad = false,
+  next = "/dashboard",
+}: {
+  linkExpired?: boolean;
+  next?: string;
+}) {
   const router = useRouter();
   const [lang, setLang] = useState<Lang>("fr");
   const [mode, setMode] = useState<Mode>("login");
@@ -44,17 +50,17 @@ export function LoginForm({ linkExpired: linkExpiredAtLoad = false }: { linkExpi
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return setError(friendlyError(error, d));
-        router.replace("/dashboard");
+        router.replace(next);
         router.refresh();
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: callbackUrl("/dashboard") },
+          options: { emailRedirectTo: callbackUrl(next) },
         });
         if (error) return setError(friendlyError(error, d));
         if (data.session) {
-          router.replace("/dashboard");
+          router.replace(next);
           router.refresh();
         } else {
           setInfo(d.checkEmail);

@@ -8,7 +8,7 @@ import styles from "./dashboard.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { restaurant } = await getStaffContext();
+  const { restaurant, isOwner } = await getStaffContext();
   const d = t(restaurant.language);
   return (
     <div dir={dir(restaurant.language)} lang={restaurant.language} className={styles.shell}>
@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Link>
         <div className={styles.navLinks}>
           <Link href="/dashboard" className="btn btn-ghost">{d.dashboard}</Link>
-          <Link href="/dashboard/settings" className="btn btn-ghost">{d.settings}</Link>
+          {isOwner && <Link href="/dashboard/settings" className="btn btn-ghost">{d.settings}</Link>}
           <LogoutButton label={d.logout} />
         </div>
       </nav>
