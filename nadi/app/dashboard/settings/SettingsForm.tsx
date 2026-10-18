@@ -138,6 +138,7 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
           <select className="input" value={language} onChange={(e) => setLanguage(e.target.value as Lang)}>
             <option value="fr">Français</option>
             <option value="ar">العربية</option>
+            <option value="en">English</option>
           </select>
         </label>
 

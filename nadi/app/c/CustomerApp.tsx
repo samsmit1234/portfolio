@@ -18,6 +18,7 @@ import {
 } from "@/lib/pushClient";
 import type { Lang, PublicOrder } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
+import { LangSwitch } from "@/components/LangSwitch";
 import styles from "./app.module.css";
 
 type Perm = "unsupported" | "default" | "granted" | "denied";
@@ -58,8 +59,7 @@ export function CustomerApp({ vapidPublicKey, firstOrderId }: { vapidPublicKey: 
     document.documentElement.dir = dir(lang);
   }, [lang]);
 
-  const switchLang = () => {
-    const next: Lang = lang === "fr" ? "ar" : "fr";
+  const switchLang = (next: Lang) => {
     setLang(next);
     try {
       localStorage.setItem("nadi:lang", next);
@@ -195,9 +195,7 @@ export function CustomerApp({ vapidPublicKey, firstOrderId }: { vapidPublicKey: 
         <div className="brand-row">
           <BrandMark size={32} color="var(--brand)" /> Nadi
         </div>
-        <button className="btn btn-ghost" onClick={switchLang}>
-          {lang === "fr" ? "العربية" : "Français"}
-        </button>
+        <LangSwitch value={lang} onChange={switchLang} />
       </header>
 
       <button

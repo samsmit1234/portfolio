@@ -1,0 +1,8 @@
+.switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; flex-shrink: 0; }
+.opt {
+  min-width: 38px; min-height: 34px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; display: grid; place-items: center; text-decoration: none;
+}
+.opt:hover { color: var(--ink); }
+.opt[aria-pressed="true"], .opt[aria-current="true"] { background: var(--brand); color: var(--brand-ink); }
+.opt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }

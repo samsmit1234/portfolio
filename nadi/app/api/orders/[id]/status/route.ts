@@ -3,7 +3,7 @@ import { getAdminSupabase, getServerSupabase } from "@/lib/supabase/server";
 import { sendReadyPush } from "@/lib/push";
 import { getBaseUrl } from "@/lib/site";
 import { UUID_RE } from "@/lib/public";
-import type { OrderStatus } from "@/lib/types";
+import type { Lang, OrderStatus } from "@/lib/types";
 
 const STATUSES: OrderStatus[] = ["preparing", "ready", "done"];
 
@@ -31,7 +31,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
   let push = null;
   if (status === "ready") {
-    const r = order.restaurants as unknown as { name: string; language: "fr" | "ar" } | null;
+    const r = order.restaurants as unknown as { name: string; language: Lang } | null;
     push = await sendReadyPush({
       orderId: order.id,
       number: order.number,

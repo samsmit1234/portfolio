@@ -8,6 +8,7 @@ import { dir, t } from "@/lib/i18n";
 import { friendlyError } from "@/lib/errors";
 import type { Lang } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
+import { LangSwitch } from "@/components/LangSwitch";
 import styles from "../login/login.module.css";
 
 /** Reached from the reset email (via /auth/callback, which opened a session). */
@@ -45,9 +46,7 @@ export function UpdatePasswordForm() {
         <div className="brand-row">
           <BrandMark size={34} color="var(--brand)" /> Nadi<span className="dot">.</span>
         </div>
-        <button className="btn btn-ghost" onClick={() => setLang(lang === "fr" ? "ar" : "fr")}>
-          {lang === "fr" ? "العربية" : "Français"}
-        </button>
+        <LangSwitch value={lang} onChange={setLang} />
       </div>
       <form onSubmit={submit} className={`card ${styles.card}`}>
         <h1>{d.newPasswordTitle}</h1>

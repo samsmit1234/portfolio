@@ -16,6 +16,7 @@ import {
   rememberOrder,
 } from "@/lib/pushClient";
 import { BrandMark } from "@/components/BrandMark";
+import { LangSwitch } from "@/components/LangSwitch";
 import styles from "./customer.module.css";
 
 type AlertState = "idle" | "enabling" | "on";
@@ -67,8 +68,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
     document.documentElement.dir = dir(lang);
   }, [lang]);
 
-  const switchLang = () => {
-    const next: Lang = lang === "fr" ? "ar" : "fr";
+  const switchLang = (next: Lang) => {
     setLang(next);
     try {
       localStorage.setItem("nadi:lang", next);
@@ -235,9 +235,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
             {d.myOrders}
           </Link>
         )}
-        <button className={`btn btn-ghost ${styles.lang}`} onClick={switchLang}>
-          {lang === "fr" ? "العربية" : "Français"}
-        </button>
+        <LangSwitch value={lang} onChange={switchLang} />
       </div>
     </header>
   );

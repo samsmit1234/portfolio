@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { t } from "@/lib/i18n";
+import { locale, t } from "@/lib/i18n";
 import { friendlyError } from "@/lib/errors";
 import type { Lang, Order, OrderStatus } from "@/lib/types";
 import { QrModal } from "@/components/QrModal";
@@ -159,7 +159,7 @@ export function OrdersBoard({
   );
 
   const time = (iso: string) =>
-    new Date(iso).toLocaleTimeString(lang === "ar" ? "ar-MA" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
+    new Date(iso).toLocaleTimeString(locale(lang), { hour: "2-digit", minute: "2-digit" });
 
   return (
     <main className={styles.main}>

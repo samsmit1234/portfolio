@@ -7,6 +7,7 @@ import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { dir, isLang, t } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
+import { LangSwitch } from "@/components/LangSwitch";
 import styles from "./counter.module.css";
 
 export const dynamic = "force-dynamic";
@@ -30,12 +31,12 @@ export default async function CounterPage({
 
   const lang: Lang = isLang(sp.lang) ? sp.lang : restaurant.language;
   const d = t(lang);
-  const other: Lang = lang === "fr" ? "ar" : "fr";
 
   async function find(formData: FormData) {
     "use server";
     const number = String(formData.get("number") ?? "").trim().slice(0, 12);
-    const l = isLang(formData.get("lang")) ? String(formData.get("lang")) : "fr";
+    const raw = formData.get("lang");
+    const l = isLang(raw) ? raw : "fr";
     // 10 lookups a minute per IP: plenty for a customer, too slow to walk every number.
     const ip = clientIp(await headers());
     if (!(await rateLimit(`find:${ip}`, 10, 60))) redirect(`/r/${restaurantId}?e=rate&lang=${l}`);
@@ -59,9 +60,7 @@ export default async function CounterPage({
           )}
           <span>{restaurant.name}</span>
         </div>
-        <a className="btn btn-ghost" href={`/r/${restaurantId}?lang=${other}`}>
-          {other === "ar" ? "العربية" : "Français"}
-        </a>
+        <LangSwitch value={lang} href={(l) => `/r/${restaurantId}?lang=${l}`} />
       </header>
 
       <form action={find} className={`card ${styles.form}`}>
