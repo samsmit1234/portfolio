@@ -8,7 +8,10 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "vapid": "web-push generate-vapid-keys",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:e2e": "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=e2e-anon NEXT_PUBLIC_SITE_URL=http://localhost:3100 next build",
+    "test:e2e": "playwright test",
+    "test:unit": "UNIT_ONLY=1 playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -22,6 +25,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/node": "^22.20.5",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",

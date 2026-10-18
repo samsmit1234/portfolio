@@ -4,7 +4,7 @@
 scans it and keeps the page open. When the order is ready, the phone rings, vibrates and
 flashes, and it also gets a Web Push notification if the browser supports it. No app, no SMS, no WhatsApp.
 
-Next.js (App Router) · TypeScript · Supabase (Postgres, Realtime, Auth, Storage) · Web Push (VAPID) · installable PWA · Vercel.
+Next.js (App Router) · TypeScript · Supabase (Postgres, Realtime, Auth, Storage) · Web Push (VAPID) · installable PWA · Netlify.
 
 ## How it works
 
@@ -20,29 +20,37 @@ Next.js (App Router) · TypeScript · Supabase (Postgres, Realtime, Auth, Storag
 
 ## Setup
 
-1. **Supabase project**: in the SQL editor, run `supabase/migrations/0001_init.sql`.
-   It creates the tables, RLS, public RPCs, the Realtime trigger and policy, the `logos` storage bucket and the cleanup function.
+1. **Supabase project**: in the SQL editor, run every file of `supabase/migrations/` in order (`0001` → latest).
+   They create the tables, RLS, public RPCs, Realtime triggers and policies, the `logos` bucket, rate limiting, the team
+   tables, numbering, stats and the cleanup/reminder jobs. On an existing project, run only the new files, after the code
+   that needs them is deployed.
+   - Auth → URL Configuration: Site URL = your app URL, and add `<app URL>/auth/callback` to the Redirect URLs
+     (email confirmation and password reset land there).
    - Auth → Providers: Email enabled. Turn off "Confirm email" if you want staff to log in right after signing up.
 2. **VAPID keys**: run `npm run vapid`.
-3. **Env vars**: copy `.env.example` → `.env.local` and fill it in. Use the same variables on Vercel.
+3. **Env vars**: copy `.env.example` → `.env.local` and fill it in. Use the same variables on Netlify.
 4. `npm install && npm run dev` → http://localhost:3000/login (creating an account creates the restaurant).
-5. **Deploy on Vercel**: import the repo and set **Root Directory = `nadi`**. Set `CRON_SECRET`.
-   `vercel.json` runs `/api/cron/cleanup` daily, the most often Vercel Hobby allows. For hourly cleanup, enable
-   `pg_cron` in Supabase and uncomment the `cron.schedule` line at the end of the migration.
+5. **Deploy on Netlify**: import the repo and set **Base directory = `nadi`** (`netlify.toml` does the rest).
+   Cleanup (hourly) and reminders (every 30 s) run from Supabase `pg_cron`, see `0002_reminders.sql` / `0003_netlify.sql`.
 
 Web Push needs HTTPS. `localhost` works for development.
 
 ## Security model
 
-- **Staff**: RLS on `restaurants` and `orders` allows rows of the restaurant whose `owner_id = auth.uid()` only.
+- **Staff**: RLS on `restaurants` and `orders` allows rows of the restaurants the user is a member of (`restaurant_members`).
+  The owner alone changes settings, the logo and the team; staff join through a single-use invitation link (48 h).
 - **Customers** have no direct table access. They read a single order through the `get_public_order(uuid)` RPC
   (security definer), so they need the unguessable UUID.
 - **Realtime**: customers can only *receive* broadcasts on `order:*` topics. They need the UUID to know the topic, and nobody can
   send on them from a client, so a "ready" status can't be spoofed.
 - **`push_subscriptions`**: no client policies at all. Only the server (service role) reads or writes it. Subscribing is capped at 10 per order
   and refused for orders already `done`.
-- **Counter mode**: `find_order_by_number` only matches open orders from the last 24 h.
-- **Cleanup**: orders older than 24 h are deleted, and their subscriptions go with them through the cascade.
+- **Counter mode**: `find_order_by_number` only matches open orders from the last 24 h. It is called by the server only,
+  rate-limited per IP (10/min; push subscribe: 20/min), so order numbers can't be enumerated.
+- **Dining-room screen** (`/r/{restaurantId}/screen`): `screen_orders()` returns numbers and status only, never order ids.
+- **Push endpoints** must be on a known browser push service (FCM, Mozilla, Apple, Windows), so the server can't be used to
+  reach other hosts.
+- **Cleanup**: orders older than 24 h are folded into hourly stats (`order_stats_hourly`) and deleted; their subscriptions go with them.
 
 ## Platform notes
 
@@ -52,20 +60,33 @@ Web Push needs HTTPS. `localhost` works for development.
   is already ready, the screen flashes and asks for a tap to start the sound.
 - **Sounds** are synthesized with Web Audio (chime / beep / siren, chosen in settings), so there are no audio files.
 
+## Tests, CI and monitoring
+
+- `npm run typecheck` · `npm run lint` · `npm run test:unit` (pure logic: push allowlist, numbering, stats, redirects).
+- End to end: `npm run build:e2e && npm run test:e2e`. Playwright runs the production build against
+  `e2e/mock-supabase.mjs` and checks the main flow: create an order → open `/o/{id}` → **Ready** → the customer page turns ready.
+- GitHub Actions (`.github/workflows/nadi-ci.yml`) runs all of the above on every push touching `nadi/`.
+- Errors: set `SENTRY_DSN` to send server errors to Sentry, web-push failures included (tagged `area=web-push` with the push
+  host and status). Without it they are only logged.
+
 ## Project layout
 
 ```
 app/
   o/[orderId]/        customer page (CustomerOrder.tsx: gesture, realtime, alarm, wake lock)
-  r/[restaurantId]/   counter-QR "type your number" page
+  r/[restaurantId]/   counter-QR "type your number" page (+ screen/: dining-room TV)
+  join/[token]/       staff invitation
+  auth/callback/      email links (PKCE) · update-password/
   login/              staff auth
-  dashboard/          orders board (+ settings/)
-  api/orders/[id]/    subscribe (public) · status (staff, sends push)
+  dashboard/          orders board (+ stats/, settings/)
+  api/orders/[id]/    subscribe (public) · status, remind (staff, send push)
+  api/reminders       repeated alerts, called by pg_cron
   api/cron/cleanup    Vercel Cron
   icons/[size]        generated PNG app icons
   manifest.ts         PWA manifest
-lib/                  supabase clients, push sender, sound engine, i18n (fr/ar)
+lib/                  supabase clients, push sender, sound engine, i18n (fr/ar/en), numbering, stats, monitoring
 public/sw.js          service worker (push + notificationclick)
 proxy.ts              session refresh + /dashboard guard
-supabase/migrations/  schema, RLS, realtime, storage
+supabase/migrations/  schema, RLS, realtime, storage (run in order)
+e2e/ tests/           Playwright end-to-end and unit tests
 ```

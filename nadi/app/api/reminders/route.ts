@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/server";
 import { sendReadyPush } from "@/lib/push";
 import { getBaseUrl } from "@/lib/site";
+import { captureException } from "@/lib/monitoring";
 import type { Lang } from "@/lib/types";
 
 /**
@@ -13,7 +14,7 @@ export async function POST() {
   const admin = getAdminSupabase();
   const { data, error } = await admin.rpc("claim_due_reminders");
   if (error) {
-    console.error("reminders: claim failed", error.message);
+    await captureException(new Error(error.message), { tags: { area: "reminders" }, extra: { step: "claim_due_reminders" } });
     return NextResponse.json({ error: "db" }, { status: 500 });
   }
   const due = (data ?? []) as { id: string; number: string; restaurant_name: string; language: Lang }[];

@@ -4,6 +4,7 @@ import webpush, { WebPushError } from "web-push";
 import { getAdminSupabase } from "./supabase/server";
 import { t } from "./i18n";
 import { isAllowedPushEndpoint } from "./pushEndpoint";
+import { captureException } from "./monitoring";
 import type { Lang } from "./types";
 
 let configured = false;
@@ -37,6 +38,7 @@ export async function sendReadyPush(opts: {
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
     .eq("order_id", opts.orderId);
+  if (error) await captureException(new Error(error.message), { tags: { area: "web-push" }, extra: { step: "load subscriptions" } });
   if (error || !subs?.length) return { sent: 0, removed: 0 };
 
   const d = t(opts.lang);
@@ -68,7 +70,10 @@ export async function sendReadyPush(opts: {
         else {
           const host = new URL(s.endpoint).host;
           const body = err instanceof WebPushError ? err.body : "";
-          console.error("web-push failed", code, host, body || (err as Error).message);
+          await captureException(err, {
+            tags: { area: "web-push", push_host: host, status: code },
+            extra: { response: body?.slice(0, 500), reminder: !!opts.reminder },
+          });
         }
       }
     }),
