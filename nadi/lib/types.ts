@@ -24,6 +24,8 @@ export interface Order {
   status: OrderStatus;
   created_at: string;
   ready_at: string | null;
+  /** Last time staff rang the customer (first "Ready" or "Rappeler"). */
+  rung_at?: string | null;
 }
 
 export interface PublicOrder {
@@ -36,4 +38,8 @@ export interface PublicOrder {
   restaurant_logo_url: string | null;
   alert_sound: AlertSound;
   language: Lang;
+  rung_at: string | null;
+  /** Wait estimate, only while preparing: recent average prep time and orders ahead. */
+  avg_prep_seconds: number | null;
+  ahead_count: number | null;
 }

@@ -127,4 +127,10 @@ export const ar: Dict = {
   dailyReset: "البدء من 1 كل يوم",
   example: "مثال",
   errPrefix: "البادئة: 4 رموز كحد أقصى (أحرف أو أرقام أو -).",
+  remind: "تذكير",
+  waitingFor: "جاهز منذ {min} د",
+  waitEstimate: "≈ {min} د",
+  aheadZero: "أنت التالي",
+  aheadOne: "طلب واحد قبلك",
+  aheadMany: "{n} طلبات قبلك",
 };

@@ -10,6 +10,9 @@ import { QrModal } from "@/components/QrModal";
 import styles from "./dashboard.module.css";
 
 
+/** Ready orders not picked up after this many minutes are highlighted. */
+const LATE_AFTER_MIN = 4;
+
 function sortOrders(list: Order[]) {
   return [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
@@ -35,6 +38,17 @@ export function OrdersBoard({
   const [creating, setCreating] = useState(false);
   const [qr, setQr] = useState<{ url: string; big?: string; title: string; subtitle?: string } | null>(null);
   const numberTouched = useRef(false);
+  // Clock for "ready for X min" and the late highlight.
+  const [now, setNow] = useState(() => Date.parse(initialOrders[0]?.created_at ?? "1970-01-01"));
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const timer = setInterval(tick, 30_000);
+    const first = setTimeout(tick, 0);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(first);
+    };
+  }, []);
 
   const upsert = useCallback((o: Order) => {
     setOrders((list) => sortOrders([o, ...list.filter((x) => x.id !== o.id)]));
@@ -127,6 +141,18 @@ export function OrdersBoard({
     setQr({ url: orderUrl(data.id), big: data.number, title: d.qrTitle });
   };
 
+  // "Rappeler": re-send the push and re-ring the customer's page.
+  const remind = async (o: Order) => {
+    setBusyId(o.id);
+    try {
+      const res = await fetch(`/api/orders/${o.id}/remind`, { method: "POST" });
+      if (!res.ok) setError(friendlyError(res.status, d));
+    } catch {
+      setError(d.errNetwork);
+    }
+    setBusyId(null);
+  };
+
   const setStatus = async (o: Order, status: OrderStatus) => {
     setBusyId(o.id);
     const prev = o;
@@ -217,22 +243,31 @@ export function OrdersBoard({
         </Column>
 
         <Column title={d.colReady} count={groups.ready.length} tone="ready">
-          {groups.ready.map((o) => (
-            <article key={o.id} className={`${styles.order} ${styles.orderReady}`}>
-              <div className={styles.orderHead}>
-                <span className={styles.orderNumber} dir="ltr">{o.number}</span>
-                <span className="muted">{o.ready_at ? time(o.ready_at) : ""}</span>
-              </div>
-              <div className={styles.orderActions}>
-                <button className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={busyId === o.id} onClick={() => setStatus(o, "done")}>
-                  {d.markDone}
-                </button>
-                <button className="btn" disabled={busyId === o.id} onClick={() => setStatus(o, "preparing")}>
-                  {d.undo}
-                </button>
-              </div>
-            </article>
-          ))}
+          {groups.ready.map((o) => {
+            const waited = o.ready_at ? Math.max(0, Math.floor((now - Date.parse(o.ready_at)) / 60_000)) : 0;
+            const late = waited >= LATE_AFTER_MIN;
+            return (
+              <article key={o.id} className={`${styles.order} ${styles.orderReady} ${late ? styles.orderLate : ""}`}>
+                <div className={styles.orderHead}>
+                  <span className={styles.orderNumber} dir="ltr">{o.number}</span>
+                  <span className={late ? styles.lateLabel : "muted"}>
+                    {waited >= 1 ? d.waitingFor.replace("{min}", String(waited)) : o.ready_at ? time(o.ready_at) : ""}
+                  </span>
+                </div>
+                <div className={styles.orderActions}>
+                  <button className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={busyId === o.id} onClick={() => setStatus(o, "done")}>
+                    {d.markDone}
+                  </button>
+                  <button className="btn" disabled={busyId === o.id} onClick={() => remind(o)}>
+                    {d.remind}
+                  </button>
+                  <button className="btn" disabled={busyId === o.id} onClick={() => setStatus(o, "preparing")}>
+                    {d.undo}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
           {!groups.ready.length && <p className={styles.empty}>{d.empty}</p>}
         </Column>
 

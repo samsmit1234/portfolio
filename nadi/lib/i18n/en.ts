@@ -131,4 +131,10 @@ export const en: Dict = {
   dailyReset: "Restart at 1 every day",
   example: "Example",
   errPrefix: "Prefix: 4 characters max (letters, digits or -).",
+  remind: "Ring again",
+  waitingFor: "Ready for {min} min",
+  waitEstimate: "≈ {min} min",
+  aheadZero: "You're next",
+  aheadOne: "1 order ahead of you",
+  aheadMany: "{n} orders ahead of you",
 };

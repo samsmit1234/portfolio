@@ -130,4 +130,10 @@ export const fr = {
   dailyReset: "Recommencer à 1 chaque jour",
   example: "Exemple",
   errPrefix: "Préfixe : 4 caractères max (lettres, chiffres ou -).",
+  remind: "Rappeler",
+  waitingFor: "Prête depuis {min} min",
+  waitEstimate: "≈ {min} min",
+  aheadZero: "Vous êtes le prochain",
+  aheadOne: "1 commande avant vous",
+  aheadMany: "{n} commandes avant vous",
 } as const;

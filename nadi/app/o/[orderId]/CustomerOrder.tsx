@@ -32,6 +32,17 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   // "Stop sound" applies to one ready event: re-readied orders have a new ready_at and ring again.
   const [mutedFor, setMutedFor] = useState<string | null>(null);
   const [connected, setConnected] = useState(true);
+  // Clock for the wait estimate, ticking every 30 s.
+  const [now, setNow] = useState(() => Date.parse(initial.created_at));
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const timer = setInterval(tick, 30_000);
+    const first = setTimeout(tick, 0);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(first);
+    };
+  }, []);
   const [iosMode, setIosMode] = useState<IosMode>("none");
   const wakeLock = useRef<WakeLockSentinel | null>(null);
   const alertOn = alertState === "on";
@@ -93,7 +104,15 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
       channel = supabase
         .channel(`order:${initial.id}`, { config: { private: true } })
         .on("broadcast", { event: "order_update" }, ({ payload }) => {
-          setOrder((o) => ({ ...o, status: payload.status, ready_at: payload.ready_at, number: payload.number }));
+          setOrder((o) => ({
+            ...o,
+            status: payload.status,
+            ready_at: payload.ready_at,
+            rung_at: payload.rung_at ?? null,
+            number: payload.number,
+          }));
+          // The wait estimate isn't in the broadcast: refresh it.
+          if (payload.status === "preparing") void refetch();
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
@@ -153,7 +172,8 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
 
   // ---- Alarm on status changes ----
   const audioUnlocked = useSyncExternalStore(subscribeAudio, isAudioUnlocked, () => false);
-  const readyKey = order.ready_at ?? "ready"; // identifies this ready event
+  // Identifies this ring: "Rappeler" sets a new rung_at, so a muted phone rings again.
+  const readyKey = order.rung_at ?? order.ready_at ?? "ready";
   const muted = order.status === "ready" && mutedFor === readyKey;
   const ringing = order.status === "ready" && !muted;
   // Page opened from a notification: sound needs one tap to unlock audio.
@@ -283,6 +303,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
           {order.status === "preparing" && <span className={styles.pulse} aria-hidden="true" />}
           {order.status === "done" ? d.statusDone : d.statusPreparing}
         </div>
+        {order.status === "preparing" && <WaitEstimate order={order} now={now} d={d} />}
         {order.status === "preparing" && <p className="muted">{d.preparingHint}</p>}
       </section>
 
@@ -337,6 +358,23 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
       </footer>
     </main>
   );
+}
+
+/** "≈ 8 min · 3 orders ahead of you", from recent prep times and the queue. */
+function WaitEstimate({ order, now, d }: { order: PublicOrder; now: number; d: ReturnType<typeof t> }) {
+  const parts: string[] = [];
+  if (order.avg_prep_seconds != null) {
+    const elapsed = (now - Date.parse(order.created_at)) / 1000;
+    const min = Math.max(1, Math.ceil((order.avg_prep_seconds - elapsed) / 60));
+    parts.push(d.waitEstimate.replace("{min}", String(min)));
+  }
+  if (order.ahead_count != null) {
+    parts.push(
+      order.ahead_count === 0 ? d.aheadZero : order.ahead_count === 1 ? d.aheadOne : d.aheadMany.replace("{n}", String(order.ahead_count)),
+    );
+  }
+  if (!parts.length) return null;
+  return <p className={styles.wait}>{parts.join(" · ")}</p>;
 }
 
 function ShareIcon() {
