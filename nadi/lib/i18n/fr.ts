@@ -122,4 +122,12 @@ export const fr = {
   joinButton: "Rejoindre",
   inviteInvalid: "Cette invitation n'est plus valable (déjà utilisée ou expirée). Demandez un nouveau lien.",
   joinedAs: "Connecté en tant que",
+  numbering: "Numérotation",
+  numberPrefix: "Préfixe (optionnel)",
+  numberPrefixHint: "Jusqu'à 4 lettres ou chiffres, ex. A-",
+  numberDigits: "Chiffres",
+  digitsNone: "Sans zéros (1, 2…)",
+  dailyReset: "Recommencer à 1 chaque jour",
+  example: "Exemple",
+  errPrefix: "Préfixe : 4 caractères max (lettres, chiffres ou -).",
 } as const;

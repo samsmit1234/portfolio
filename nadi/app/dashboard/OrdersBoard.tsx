@@ -4,14 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { locale, t } from "@/lib/i18n";
 import { friendlyError } from "@/lib/errors";
-import type { Lang, Order, OrderStatus } from "@/lib/types";
+import type { Lang, Order, OrderStatus, Restaurant } from "@/lib/types";
+import { nextNumber } from "@/lib/numbering";
 import { QrModal } from "@/components/QrModal";
 import styles from "./dashboard.module.css";
 
-function nextNumber(orders: Order[]) {
-  const nums = orders.map((o) => parseInt(o.number, 10)).filter((n) => Number.isFinite(n));
-  return String(nums.length ? Math.max(...nums) + 1 : 1);
-}
 
 function sortOrders(list: Order[]) {
   return [...list].sort((a, b) => b.created_at.localeCompare(a.created_at));
@@ -22,7 +19,9 @@ export function OrdersBoard({
   lang,
   initialOrders,
   siteUrl,
+  numbering,
 }: {
+  numbering: Pick<Restaurant, "number_prefix" | "number_digits" | "daily_reset" | "timezone">;
   restaurantId: string;
   lang: Lang;
   initialOrders: Order[];
@@ -30,7 +29,7 @@ export function OrdersBoard({
 }) {
   const d = t(lang);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [number, setNumber] = useState(() => nextNumber(initialOrders));
+  const [number, setNumber] = useState(() => nextNumber(initialOrders, numbering));
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -95,8 +94,8 @@ export function OrdersBoard({
 
   // Keep the suggested next number fresh until staff types their own.
   useEffect(() => {
-    if (!numberTouched.current) setNumber(nextNumber(orders));
-  }, [orders]);
+    if (!numberTouched.current) setNumber(nextNumber(orders, numbering));
+  }, [orders, numbering]);
 
   // Only called from click handlers, so window is always available.
   const base = () => siteUrl || window.location.origin;

@@ -119,4 +119,12 @@ export const ar: Dict = {
   joinButton: "انضمام",
   inviteInvalid: "هذه الدعوة لم تعد صالحة (مستعملة أو منتهية). اطلب رابطاً جديداً.",
   joinedAs: "متصل باسم",
+  numbering: "الترقيم",
+  numberPrefix: "بادئة (اختياري)",
+  numberPrefixHint: "حتى 4 أحرف أو أرقام، مثل A-",
+  numberDigits: "عدد الأرقام",
+  digitsNone: "بدون أصفار (1، 2…)",
+  dailyReset: "البدء من 1 كل يوم",
+  example: "مثال",
+  errPrefix: "البادئة: 4 رموز كحد أقصى (أحرف أو أرقام أو -).",
 };

@@ -59,3 +59,10 @@
 .roleChip { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
 .roleChip[data-role="owner"] { border-color: var(--brand); color: var(--brand); }
 .invites { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* ---------- Numbering ---------- */
+.numbering { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 16px; display: grid; gap: 12px; margin: 0; min-width: 0; }
+.numbering legend { padding: 0 6px; font-weight: 600; font-size: 0.92rem; }
+.numberingRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 500; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--brand); }

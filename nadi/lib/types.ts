@@ -11,6 +11,10 @@ export interface Restaurant {
   alert_sound: AlertSound;
   language: Lang;
   created_at: string;
+  number_prefix: string;
+  number_digits: number;
+  daily_reset: boolean;
+  timezone: string;
 }
 
 export interface Order {

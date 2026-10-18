@@ -24,6 +24,12 @@ export default async function DashboardPage() {
       lang={restaurant.language}
       initialOrders={(orders ?? []) as Order[]}
       siteUrl={process.env.NEXT_PUBLIC_SITE_URL ?? ""}
+      numbering={{
+        number_prefix: restaurant.number_prefix ?? "",
+        number_digits: restaurant.number_digits ?? 0,
+        daily_reset: restaurant.daily_reset ?? true,
+        timezone: restaurant.timezone ?? "Africa/Casablanca",
+      }}
     />
   );
 }

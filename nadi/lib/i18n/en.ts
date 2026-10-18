@@ -123,4 +123,12 @@ export const en: Dict = {
   joinButton: "Join",
   inviteInvalid: "This invitation is no longer valid (already used or expired). Ask for a new link.",
   joinedAs: "Signed in as",
+  numbering: "Numbering",
+  numberPrefix: "Prefix (optional)",
+  numberPrefixHint: "Up to 4 letters or digits, e.g. A-",
+  numberDigits: "Digits",
+  digitsNone: "No zeros (1, 2…)",
+  dailyReset: "Restart at 1 every day",
+  example: "Example",
+  errPrefix: "Prefix: 4 characters max (letters, digits or -).",
 };

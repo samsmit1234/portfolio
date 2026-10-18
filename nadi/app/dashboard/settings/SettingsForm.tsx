@@ -6,6 +6,7 @@ import { getBrowserSupabase } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { previewSound } from "@/lib/sound";
 import { friendlyError } from "@/lib/errors";
+import { formatNumber } from "@/lib/numbering";
 import type { AlertSound, Lang, Restaurant } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
 import styles from "../dashboard.module.css";
@@ -21,6 +22,9 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
   const [logoUrl, setLogoUrl] = useState(restaurant.logo_url);
   const [sound, setSound] = useState<AlertSound>(restaurant.alert_sound);
   const [language, setLanguage] = useState<Lang>(restaurant.language);
+  const [prefix, setPrefix] = useState(restaurant.number_prefix ?? "");
+  const [digits, setDigits] = useState(restaurant.number_digits ?? 0);
+  const [dailyReset, setDailyReset] = useState(restaurant.daily_reset ?? true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   // Logo currently saved in the database, and files uploaded since then.
@@ -58,11 +62,20 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^[A-Za-z0-9-]{0,4}$/.test(prefix)) return setMsg({ ok: false, text: d.errPrefix });
     setBusy(true);
     setMsg(null);
     const { error } = await getBrowserSupabase()
       .from("restaurants")
-      .update({ name: name.trim() || restaurant.name, logo_url: logoUrl, alert_sound: sound, language })
+      .update({
+        name: name.trim() || restaurant.name,
+        logo_url: logoUrl,
+        alert_sound: sound,
+        language,
+        number_prefix: prefix,
+        number_digits: digits,
+        daily_reset: dailyReset,
+      })
       .eq("id", restaurant.id);
     setBusy(false);
     if (error) return setMsg({ ok: false, text: friendlyError(error, d) });
@@ -141,6 +154,42 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
             <option value="en">English</option>
           </select>
         </label>
+
+        <fieldset className={styles.numbering}>
+          <legend>{d.numbering}</legend>
+          <div className={styles.numberingRow}>
+            <label className="field">
+              {d.numberPrefix}
+              <input
+                className="input"
+                value={prefix}
+                maxLength={4}
+                onChange={(e) => setPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
+                placeholder="A-"
+                dir="ltr"
+              />
+            </label>
+            <label className="field">
+              {d.numberDigits}
+              <select className="input" value={digits} onChange={(e) => setDigits(Number(e.target.value))}>
+                <option value={0}>{d.digitsNone}</option>
+                <option value={2}>01, 02…</option>
+                <option value={3}>001, 002…</option>
+              </select>
+            </label>
+          </div>
+          <label className={styles.check}>
+            <input type="checkbox" checked={dailyReset} onChange={(e) => setDailyReset(e.target.checked)} />
+            {d.dailyReset}
+          </label>
+          <p className="muted">
+            {d.example} :{" "}
+            <strong className="num" dir="ltr">
+              {formatNumber(1, { number_prefix: prefix, number_digits: digits })},{" "}
+              {formatNumber(2, { number_prefix: prefix, number_digits: digits })}…
+            </strong>
+          </p>
+        </fieldset>
 
         <div className={styles.saveRow}>
           <button className="btn btn-primary btn-lg" disabled={busy}>
