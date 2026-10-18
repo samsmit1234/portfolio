@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/server";
 import { UUID_RE } from "@/lib/public";
+import { isAllowedPushEndpoint } from "@/lib/pushEndpoint";
 
 const MAX_SUBS_PER_ORDER = 10;
 
@@ -19,7 +20,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const p256dh = body.keys?.p256dh;
   const auth = body.keys?.auth;
   if (
-    typeof endpoint !== "string" || !endpoint.startsWith("https://") || endpoint.length > 1000 ||
+    typeof endpoint !== "string" || endpoint.length > 1000 || !isAllowedPushEndpoint(endpoint) ||
     typeof p256dh !== "string" || p256dh.length > 200 ||
     typeof auth !== "string" || auth.length > 100
   ) {

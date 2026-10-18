@@ -45,6 +45,33 @@ export function OrdersBoard({
     setOrders((list) => sortOrders([o, ...list.filter((x) => x.id !== o.id)]));
   }, []);
 
+  // Full reload of the board (last 24 h). Realtime events missed while the
+  // tablet slept or the network dropped are never replayed, so resync on
+  // (re)connect, when the page becomes visible, when back online, and every 30 s.
+  const refetch = useCallback(async () => {
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { data, error } = await getBrowserSupabase()
+      .from("orders")
+      .select("*")
+      .eq("restaurant_id", restaurantId)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false });
+    if (!error && data) setOrders(sortOrders(data as Order[]));
+  }, [restaurantId]);
+
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === "visible" && void refetch();
+    const onOnline = () => void refetch();
+    const timer = setInterval(() => void refetch(), 30_000);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [refetch]);
+
   // Live updates from other staff devices.
   useEffect(() => {
     const supabase = getBrowserSupabase();
@@ -62,11 +89,13 @@ export function OrdersBoard({
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void refetch();
+      });
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [restaurantId, upsert]);
+  }, [restaurantId, upsert, refetch]);
 
   // Keep the suggested next number fresh until staff types their own.
   useEffect(() => {
@@ -92,7 +121,8 @@ export function OrdersBoard({
       .single();
     setCreating(false);
     if (error || !data) {
-      setError(error?.message ?? "Error");
+      // 23505 = orders_open_number_uniq: another device just created this number.
+      setError(error?.code === "23505" ? d.duplicateNumber : (error?.message ?? "Error"));
       return;
     }
     upsert(data as Order);

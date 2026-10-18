@@ -3,6 +3,7 @@ import "server-only";
 import webpush, { WebPushError } from "web-push";
 import { getAdminSupabase } from "./supabase/server";
 import { t } from "./i18n";
+import { isAllowedPushEndpoint } from "./pushEndpoint";
 import type { Lang } from "./types";
 
 let configured = false;
@@ -48,10 +49,11 @@ export async function sendReadyPush(opts: {
     lang: opts.lang,
   });
 
-  const gone: string[] = [];
+  // Never contact a host outside the push services, even for rows stored before validation existed.
+  const gone: string[] = subs.filter((s) => !isAllowedPushEndpoint(s.endpoint)).map((s) => s.id);
   let sent = 0;
   await Promise.all(
-    subs.map(async (s) => {
+    subs.filter((s) => !gone.includes(s.id)).map(async (s) => {
       try {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
