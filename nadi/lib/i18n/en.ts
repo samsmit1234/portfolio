@@ -137,4 +137,9 @@ export const en: Dict = {
   aheadZero: "You're next",
   aheadOne: "1 order ahead of you",
   aheadMany: "{n} orders ahead of you",
+  screenReadyTitle: "Ready: please come to the counter",
+  screenPreparingTitle: "Being prepared",
+  screenStart: "Tap the screen to turn on sound and full screen",
+  screenOpen: "Dining room screen",
+  screenNone: "No orders right now",
 };

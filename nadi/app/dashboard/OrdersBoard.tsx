@@ -214,6 +214,9 @@ export function OrdersBoard({
         >
           {d.counterQr}
         </button>
+        <a className="btn" href={`/r/${restaurantId}/screen`} target="_blank" rel="noopener">
+          {d.screenOpen}
+        </a>
       </section>
       {error && <p className={`error ${styles.errorBar}`}>{error}</p>}
 

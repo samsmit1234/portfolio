@@ -133,4 +133,9 @@ export const ar: Dict = {
   aheadZero: "أنت التالي",
   aheadOne: "طلب واحد قبلك",
   aheadMany: "{n} طلبات قبلك",
+  screenReadyTitle: "جاهزة: تفضّلوا إلى الشباك",
+  screenPreparingTitle: "قيد التحضير",
+  screenStart: "المس الشاشة لتفعيل الصوت والشاشة الكاملة",
+  screenOpen: "شاشة القاعة",
+  screenNone: "لا توجد طلبات حالياً",
 };

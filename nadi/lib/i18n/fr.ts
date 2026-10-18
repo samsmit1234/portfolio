@@ -136,4 +136,9 @@ export const fr = {
   aheadZero: "Vous êtes le prochain",
   aheadOne: "1 commande avant vous",
   aheadMany: "{n} commandes avant vous",
+  screenReadyTitle: "Prêtes : venez au comptoir",
+  screenPreparingTitle: "En préparation",
+  screenStart: "Touchez l'écran pour activer le son et le plein écran",
+  screenOpen: "Écran salle",
+  screenNone: "Aucune commande pour le moment",
 } as const;

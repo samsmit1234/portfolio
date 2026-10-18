@@ -1,0 +1,30 @@
+/* Dining-room TV: read from across the room. Sized in vmin so it fills any screen. */
+.screen {
+  min-height: 100dvh; display: grid; grid-template-columns: 3fr 2fr; grid-template-rows: auto 1fr;
+  gap: 2vmin 3vmin; padding: 3vmin 4vmin; background: var(--bg); color: var(--ink); overflow: hidden;
+}
+@media (orientation: portrait) { .screen { grid-template-columns: 1fr; grid-template-rows: auto 3fr 2fr; } }
+.header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 2vmin; }
+.brand { display: flex; align-items: center; gap: 2vmin; font-family: var(--display); font-weight: 800; font-size: 4vmin; letter-spacing: 0.12em; text-transform: uppercase; }
+.logo { width: 7vmin; height: 7vmin; border-radius: 1.5vmin; object-fit: cover; }
+.clock { font-family: var(--cond); font-size: 5vmin; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.ready { border: 0.4vmin solid var(--ready); border-radius: 3vmin; background: var(--ready-soft); padding: 3vmin; display: flex; flex-direction: column; gap: 2vmin; min-height: 0; }
+.readyTitle { font-family: var(--display); font-size: 4.2vmin; color: var(--ready); }
+:lang(ar) .readyTitle, :lang(ar) .prepTitle { font-family: var(--font); }
+.readyGrid { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1vmin 4vmin; min-height: 0; overflow: hidden; }
+.readyNum { font-family: var(--cond); font-weight: 700; font-size: 14vmin; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.fresh { color: var(--ready); animation: pop 1s ease-in-out infinite alternate; }
+@keyframes pop { to { transform: scale(1.08); color: var(--brand); } }
+@media (prefers-reduced-motion: reduce) { .fresh { animation: none; } }
+
+.preparing { border: 0.25vmin solid var(--line); border-radius: 3vmin; background: var(--surface); padding: 3vmin; display: flex; flex-direction: column; gap: 2vmin; min-height: 0; }
+.prepTitle { font-family: var(--display); font-size: 3.4vmin; color: var(--muted); }
+.prepGrid { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1vmin 3vmin; min-height: 0; overflow: hidden; }
+.prepNum { font-family: var(--cond); font-weight: 600; font-size: 8vmin; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--muted); }
+.none { color: var(--muted); font-size: 3vmin; }
+
+.start {
+  position: fixed; inset: auto 0 4vmin; margin: 0 auto; width: fit-content; max-width: 90vw;
+  background: var(--brand); color: var(--brand-ink); border-radius: 999px; padding: 1.6vmin 3.2vmin; font-weight: 600; font-size: 2.4vmin; cursor: pointer;
+}
