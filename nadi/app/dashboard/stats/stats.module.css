@@ -1,0 +1,39 @@
+.main { padding: 16px; max-width: 960px; margin: 0 auto; display: grid; gap: 16px; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.title { font-size: 1.6rem; margin: 0; }
+.ranges { display: flex; gap: 6px; }
+
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) { .kpis { grid-template-columns: 1fr; } }
+.kpi, .card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px 16px;
+}
+.kpi { display: grid; gap: 4px; }
+.kpiLabel { color: var(--muted); font-size: 0.9rem; }
+.kpiValue { font-family: var(--cond); font-size: 2.2rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+
+.card { display: grid; gap: 12px; }
+.cardTitle { font-size: 1rem; margin: 0; text-transform: uppercase; letter-spacing: 0.06em; }
+.muted { color: var(--muted); margin: 0; }
+.empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); }
+
+.dayList { display: grid; gap: 6px; }
+.dayRow { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3em 4.5em; gap: 10px; align-items: center; }
+.dayName { color: var(--muted); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track { block-size: 14px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.bar { display: block; block-size: 100%; background: var(--brand); border-radius: 999px; }
+.dayValue { font-variant-numeric: tabular-nums; font-weight: 700; text-align: end; }
+.dayPrep { color: var(--muted); font-size: 0.85rem; text-align: end; white-space: nowrap; }
+
+.hours { display: flex; gap: 4px; align-items: stretch; block-size: 180px; overflow-x: auto; }
+.hourCol { flex: 1 0 22px; display: grid; grid-template-rows: auto 1fr auto; gap: 4px; text-align: center; }
+.hourCount { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; min-block-size: 1em; }
+.hourTrack { display: flex; align-items: flex-end; }
+.hourBar { display: block; inline-size: 100%; min-block-size: 2px; background: color-mix(in srgb, var(--brand) 45%, transparent); border-radius: 4px 4px 0 0; }
+.peak { background: var(--brand); }
+.hourLabel { font-size: 0.7rem; color: var(--muted); }
+@media (max-width: 640px) {
+  .dayRow { grid-template-columns: 5.5em minmax(0, 1fr) 2.2em 3.2em; gap: 6px; }
+  .dayName { font-size: 0.8rem; }
+}

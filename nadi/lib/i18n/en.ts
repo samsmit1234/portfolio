@@ -142,4 +142,13 @@ export const en: Dict = {
   screenStart: "Tap the screen to turn on sound and full screen",
   screenOpen: "Dining room screen",
   screenNone: "No orders right now",
+  stats: "Stats",
+  statsOrders: "Orders",
+  statsAvgPrep: "Average preparation",
+  statsPerDay: "Orders per day",
+  statsPeakHours: "Peak hours",
+  statsBusiest: "Busiest: {h}",
+  statsRange: "{n} days",
+  statsNoData: "No data for this period yet.",
+  statsMinutes: "{min} min",
 };

@@ -141,4 +141,13 @@ export const fr = {
   screenStart: "Touchez l'écran pour activer le son et le plein écran",
   screenOpen: "Écran salle",
   screenNone: "Aucune commande pour le moment",
+stats: "Statistiques",
+  statsOrders: "Commandes",
+  statsAvgPrep: "Préparation moyenne",
+  statsPerDay: "Commandes par jour",
+  statsPeakHours: "Heures de pointe",
+  statsBusiest: "Plus chargé : {h}",
+  statsRange: "{n} jours",
+  statsNoData: "Pas encore de données sur cette période.",
+  statsMinutes: "{min} min",
 } as const;

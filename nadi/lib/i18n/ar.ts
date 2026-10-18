@@ -138,4 +138,13 @@ export const ar: Dict = {
   screenStart: "المس الشاشة لتفعيل الصوت والشاشة الكاملة",
   screenOpen: "شاشة القاعة",
   screenNone: "لا توجد طلبات حالياً",
+  stats: "الإحصائيات",
+  statsOrders: "الطلبات",
+  statsAvgPrep: "متوسط التحضير",
+  statsPerDay: "الطلبات في اليوم",
+  statsPeakHours: "ساعات الذروة",
+  statsBusiest: "الأكثر ازدحاماً: {h}",
+  statsRange: "{n} يوم",
+  statsNoData: "لا توجد بيانات لهذه الفترة بعد.",
+  statsMinutes: "{min} د",
 };

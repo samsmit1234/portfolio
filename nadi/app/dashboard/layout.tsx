@@ -19,6 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </Link>
         <div className={styles.navLinks}>
           <Link href="/dashboard" className="btn btn-ghost">{d.dashboard}</Link>
+          <Link href="/dashboard/stats" className="btn btn-ghost">{d.stats}</Link>
           {isOwner && <Link href="/dashboard/settings" className="btn btn-ghost">{d.settings}</Link>}
           <LogoutButton label={d.logout} />
         </div>
