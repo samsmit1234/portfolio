@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { dir, isLang, t } from "@/lib/i18n";
-import { isAudioUnlocked, startAlarm, stopAlarm, unlockAudio } from "@/lib/sound";
+import { isAudioUnlocked, startAlarm, stopAlarm, subscribeAudio, unlockAudio } from "@/lib/sound";
 import type { Lang, PublicOrder } from "@/lib/types";
 import {
   getPushSubscription,
@@ -28,8 +28,8 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   const [lang, setLang] = useState<Lang>(initial.language);
   const [alertState, setAlertState] = useState<AlertState>("idle");
   const [pushState, setPushState] = useState<PushState>("unknown");
-  const [muted, setMuted] = useState(false);
-  const [needsTap, setNeedsTap] = useState(false);
+  // "Stop sound" applies to one ready event: re-readied orders have a new ready_at and ring again.
+  const [mutedFor, setMutedFor] = useState<string | null>(null);
   const [connected, setConnected] = useState(true);
   const [iosMode, setIosMode] = useState<IosMode>("none");
   const wakeLock = useRef<WakeLockSentinel | null>(null);
@@ -37,6 +37,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   const d = t(lang);
 
   // ---- Language (restaurant default, remembered per device) ----
+  /* eslint-disable react-hooks/set-state-in-effect -- browser-only values (localStorage, user agent) can only be read after hydration */
   useEffect(() => {
     try {
       const saved = localStorage.getItem("nadi:lang");
@@ -59,6 +60,7 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
       }
     }
   }, [initial.id, vapidPublicKey]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -150,28 +152,23 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   }, [alertOn, order.status, requestWakeLock]);
 
   // ---- Alarm on status changes ----
-  useEffect(() => {
-    // A re-opened order (staff undo) should ring again even if it was muted before.
-    if (order.status !== "ready") setMuted(false);
-  }, [order.status]);
+  const audioUnlocked = useSyncExternalStore(subscribeAudio, isAudioUnlocked, () => false);
+  const readyKey = order.ready_at ?? "ready"; // identifies this ready event
+  const muted = order.status === "ready" && mutedFor === readyKey;
+  const ringing = order.status === "ready" && !muted;
+  // Page opened from a notification: sound needs one tap to unlock audio.
+  const needsTap = ringing && !audioUnlocked;
 
   useEffect(() => {
-    if (order.status === "ready" && !muted) {
-      if (isAudioUnlocked()) {
-        startAlarm(order.alert_sound);
-        setNeedsTap(false);
-      } else {
-        // Page opened from a notification: audio not unlocked yet.
-        if ("vibrate" in navigator) navigator.vibrate?.([400, 150, 400]);
-        setNeedsTap(true);
-      }
-    } else {
-      stopAlarm();
-      setNeedsTap(false);
-    }
-    if (order.status === "done") releaseWakeLock();
+    if (!ringing) return;
+    if (audioUnlocked) startAlarm(order.alert_sound);
+    else if ("vibrate" in navigator) navigator.vibrate?.([400, 150, 400]);
     return () => stopAlarm();
-  }, [order.status, order.alert_sound, muted, releaseWakeLock]);
+  }, [ringing, audioUnlocked, order.alert_sound]);
+
+  useEffect(() => {
+    if (order.status === "done") releaseWakeLock();
+  }, [order.status, releaseWakeLock]);
 
   useEffect(() => {
     const base = `#${order.number}`;
@@ -211,16 +208,12 @@ export function CustomerOrder({ initial, vapidPublicKey }: { initial: PublicOrde
   };
 
   const onReadyTap = () => {
-    if (needsTap) {
-      unlockAudio();
-      startAlarm(order.alert_sound);
-      setNeedsTap(false);
-    }
+    if (needsTap) unlockAudio(); // the alarm effect starts once audio is running
   };
 
   const stopSound = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setMuted(true);
+    setMutedFor(readyKey);
     stopAlarm();
   };
 

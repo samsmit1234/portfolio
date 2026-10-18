@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
@@ -40,6 +40,7 @@ export function CustomerApp({ vapidPublicKey, firstOrderId }: { vapidPublicKey: 
   const d = t(lang);
 
   // ---- Boot: language, remembered orders, permission ----
+  /* eslint-disable react-hooks/set-state-in-effect -- browser-only values (localStorage, user agent) can only be read after hydration */
   useEffect(() => {
     try {
       const saved = localStorage.getItem("nadi:lang");
@@ -50,6 +51,7 @@ export function CustomerApp({ vapidPublicKey, firstOrderId }: { vapidPublicKey: 
     if (!pushSupported(vapidPublicKey)) setPerm("unsupported");
     else setPerm(Notification.permission as Perm);
   }, [firstOrderId, vapidPublicKey]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -92,6 +94,7 @@ export function CustomerApp({ vapidPublicKey, firstOrderId }: { vapidPublicKey: 
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- network fetch; state is set after it resolves
     void refresh(ids);
     const poll = setInterval(() => void refresh(ids), 10_000);
     const onVisible = () => document.visibilityState === "visible" && void refresh(ids);
@@ -275,7 +278,9 @@ function Scanner({
   const [denied, setDenied] = useState(false);
   // Keep the camera running across parent re-renders (the order list polls).
   const onFoundRef = useRef(onFound);
-  onFoundRef.current = onFound;
+  useLayoutEffect(() => {
+    onFoundRef.current = onFound;
+  });
 
   useEffect(() => {
     let stream: MediaStream | null = null;

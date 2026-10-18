@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
 import { previewSound } from "@/lib/sound";
+import { friendlyError } from "@/lib/errors";
 import type { AlertSound, Lang, Restaurant } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
 import styles from "../dashboard.module.css";
 
 const SOUNDS: AlertSound[] = ["chime", "beep", "siren"];
+// Same list as the "logos" bucket (allowed_mime_types); SVG is refused there.
+const LOGO_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 
 export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
   const router = useRouter();
@@ -19,22 +23,36 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
   const [language, setLanguage] = useState<Lang>(restaurant.language);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Logo currently saved in the database, and files uploaded since then.
+  const savedLogo = useRef(restaurant.logo_url);
+  const uploaded = useRef<string[]>([]);
   const d = t(language);
+
+  // Storage path of one of this restaurant's logos, from its public URL.
+  const logoPath = (url: string | null) => {
+    const marker = "/storage/v1/object/public/logos/";
+    const i = url?.indexOf(marker) ?? -1;
+    if (!url || i < 0) return null;
+    const path = decodeURIComponent(url.slice(i + marker.length));
+    return path.startsWith(`${restaurant.id}/`) ? path : null;
+  };
 
   const soundLabel: Record<AlertSound, string> = { chime: d.soundChime, beep: d.soundBeep, siren: d.soundSiren };
 
   const uploadLogo = async (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      setMsg({ ok: false, text: "Max 2 MB" });
-      return;
-    }
+    const ext = LOGO_TYPES[file.type];
+    if (!ext) return setMsg({ ok: false, text: d.errLogoType });
+    if (file.size > MAX_LOGO_BYTES) return setMsg({ ok: false, text: d.errLogoSize });
     setBusy(true);
-    const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+    setMsg(null);
     const path = `${restaurant.id}/logo-${Date.now()}.${ext}`;
     const supabase = getBrowserSupabase();
-    const { error } = await supabase.storage.from("logos").upload(path, file, { contentType: file.type, upsert: true });
-    if (error) setMsg({ ok: false, text: error.message });
-    else setLogoUrl(supabase.storage.from("logos").getPublicUrl(path).data.publicUrl);
+    const { error } = await supabase.storage.from("logos").upload(path, file, { contentType: file.type });
+    if (error) setMsg({ ok: false, text: friendlyError(error, d) });
+    else {
+      uploaded.current.push(path);
+      setLogoUrl(supabase.storage.from("logos").getPublicUrl(path).data.publicUrl);
+    }
     setBusy(false);
   };
 
@@ -47,11 +65,18 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
       .update({ name: name.trim() || restaurant.name, logo_url: logoUrl, alert_sound: sound, language })
       .eq("id", restaurant.id);
     setBusy(false);
-    if (error) setMsg({ ok: false, text: error.message });
-    else {
-      setMsg({ ok: true, text: d.saved });
-      router.refresh();
-    }
+    if (error) return setMsg({ ok: false, text: friendlyError(error, d) });
+
+    // Remove logo files no longer used: the replaced one and unsaved uploads.
+    const keep = logoPath(logoUrl);
+    const stale = [logoPath(savedLogo.current), ...uploaded.current].filter(
+      (p): p is string => !!p && p !== keep,
+    );
+    if (stale.length) await getBrowserSupabase().storage.from("logos").remove([...new Set(stale)]);
+    savedLogo.current = logoUrl;
+    uploaded.current = [];
+    setMsg({ ok: true, text: d.saved });
+    router.refresh();
   };
 
   return (
@@ -77,7 +102,7 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
             )}
             <input
               type="file"
-              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              accept="image/png,image/jpeg,image/webp"
               onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
             />
             {logoUrl && (

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/server";
 import { UUID_RE } from "@/lib/public";
 import { isAllowedPushEndpoint } from "@/lib/pushEndpoint";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const MAX_SUBS_PER_ORDER = 10;
 
@@ -9,6 +10,9 @@ const MAX_SUBS_PER_ORDER = 10;
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!(await rateLimit(`subscribe:${clientIp(req.headers)}`, 20, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   let body: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
   try {

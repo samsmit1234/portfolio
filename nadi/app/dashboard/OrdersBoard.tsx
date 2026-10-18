@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/errors";
 import type { Lang, Order, OrderStatus } from "@/lib/types";
 import { QrModal } from "@/components/QrModal";
 import styles from "./dashboard.module.css";
@@ -34,12 +35,7 @@ export function OrdersBoard({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [qr, setQr] = useState<{ url: string; big?: string; title: string; subtitle?: string } | null>(null);
-  const [base, setBase] = useState(siteUrl);
   const numberTouched = useRef(false);
-
-  useEffect(() => {
-    if (!siteUrl) setBase(window.location.origin);
-  }, [siteUrl]);
 
   const upsert = useCallback((o: Order) => {
     setOrders((list) => sortOrders([o, ...list.filter((x) => x.id !== o.id)]));
@@ -102,7 +98,9 @@ export function OrdersBoard({
     if (!numberTouched.current) setNumber(nextNumber(orders));
   }, [orders]);
 
-  const orderUrl = (id: string) => `${base}/o/${id}`;
+  // Only called from click handlers, so window is always available.
+  const base = () => siteUrl || window.location.origin;
+  const orderUrl = (id: string) => `${base()}/o/${id}`;
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +120,7 @@ export function OrdersBoard({
     setCreating(false);
     if (error || !data) {
       // 23505 = orders_open_number_uniq: another device just created this number.
-      setError(error?.code === "23505" ? d.duplicateNumber : (error?.message ?? "Error"));
+      setError(friendlyError(error, d));
       return;
     }
     upsert(data as Order);
@@ -134,14 +132,19 @@ export function OrdersBoard({
     setBusyId(o.id);
     const prev = o;
     upsert({ ...o, status, ready_at: status === "ready" ? new Date().toISOString() : status === "preparing" ? null : o.ready_at });
-    const res = await fetch(`/api/orders/${o.id}/status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) {
+    try {
+      const res = await fetch(`/api/orders/${o.id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        upsert(prev);
+        setError(friendlyError(res.status, d));
+      }
+    } catch {
       upsert(prev);
-      setError(`HTTP ${res.status}`);
+      setError(d.errNetwork);
     }
     setBusyId(null);
   };
@@ -182,7 +185,7 @@ export function OrdersBoard({
         </form>
         <button
           className="btn"
-          onClick={() => setQr({ url: `${base}/r/${restaurantId}`, title: d.counterQr, subtitle: d.counterQrHint })}
+          onClick={() => setQr({ url: `${base()}/r/${restaurantId}`, title: d.counterQr, subtitle: d.counterQrHint })}
         >
           {d.counterQr}
         </button>

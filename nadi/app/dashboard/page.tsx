@@ -6,15 +6,16 @@ import { OrdersBoard } from "./OrdersBoard";
 
 export const metadata: Metadata = { title: "Commandes" };
 
+const last24h = () => new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+
 export default async function DashboardPage() {
   const { restaurant } = await getStaffContext();
   const supabase = await getServerSupabase();
-  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { data: orders } = await supabase
     .from("orders")
     .select("*")
     .eq("restaurant_id", restaurant.id)
-    .gte("created_at", since)
+    .gte("created_at", last24h())
     .order("created_at", { ascending: false });
 
   return (

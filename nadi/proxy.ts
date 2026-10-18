@@ -39,6 +39,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Customer pages (/o, /r), the SW and assets never need the staff session.
-  matcher: ["/dashboard/:path*", "/login", "/api/orders/:path*"],
+  // Customer pages (/o, /r, /c), the SW, assets and the public subscribe API
+  // never need the staff session; only the staff status API does.
+  matcher: ["/dashboard/:path*", "/login", "/api/orders/:id/status"],
 };

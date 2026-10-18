@@ -11,6 +11,15 @@ import type { AlertSound } from "./types";
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let loopTimer: ReturnType<typeof setTimeout> | null = null;
+const audioListeners = new Set<() => void>();
+
+/** For useSyncExternalStore: notified when the AudioContext starts or stops running. */
+export function subscribeAudio(listener: () => void) {
+  audioListeners.add(listener);
+  return () => {
+    audioListeners.delete(listener);
+  };
+}
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -18,6 +27,7 @@ function getCtx(): AudioContext | null {
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
     ctx = new AC();
+    ctx.addEventListener("statechange", () => audioListeners.forEach((l) => l()));
     master = ctx.createGain();
     master.gain.value = 1;
     master.connect(ctx.destination);

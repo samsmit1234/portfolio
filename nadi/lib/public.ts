@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@supabase/supabase-js";
 import type { PublicOrder } from "./types";
 
@@ -11,9 +12,10 @@ export function getAnonSupabase() {
   });
 }
 
-export async function fetchPublicOrder(id: string): Promise<PublicOrder | null> {
+/** One RPC per request, even when both generateMetadata and the page ask. */
+export const fetchPublicOrder = cache(async (id: string): Promise<PublicOrder | null> => {
   if (!UUID_RE.test(id)) return null;
   const { data, error } = await getAnonSupabase().rpc("get_public_order", { p_order_id: id });
   if (error || !data?.length) return null;
   return data[0] as PublicOrder;
-}
+});

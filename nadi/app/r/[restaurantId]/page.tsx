@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getAnonSupabase, UUID_RE } from "@/lib/public";
+import { getAdminSupabase } from "@/lib/supabase/server";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { dir, isLang, t } from "@/lib/i18n";
 import type { Lang } from "@/lib/types";
 import { BrandMark } from "@/components/BrandMark";
@@ -32,8 +35,11 @@ export default async function CounterPage({
   async function find(formData: FormData) {
     "use server";
     const number = String(formData.get("number") ?? "").trim().slice(0, 12);
-    const l = String(formData.get("lang") ?? "fr");
-    const { data: id } = await getAnonSupabase().rpc("find_order_by_number", {
+    const l = isLang(formData.get("lang")) ? String(formData.get("lang")) : "fr";
+    // 10 lookups a minute per IP: plenty for a customer, too slow to walk every number.
+    const ip = clientIp(await headers());
+    if (!(await rateLimit(`find:${ip}`, 10, 60))) redirect(`/r/${restaurantId}?e=rate&lang=${l}`);
+    const { data: id } = await getAdminSupabase().rpc("find_order_by_number", {
       p_restaurant_id: restaurantId,
       p_number: number,
     });
@@ -72,7 +78,7 @@ export default async function CounterPage({
           maxLength={12}
           dir="ltr"
         />
-        {sp.e && <p className="error">{d.notFoundNumber}</p>}
+        {sp.e && <p className="error">{sp.e === "rate" ? d.tooManyTries : d.notFoundNumber}</p>}
         <button className="btn btn-primary btn-xl" type="submit">{d.find}</button>
       </form>
     </main>
