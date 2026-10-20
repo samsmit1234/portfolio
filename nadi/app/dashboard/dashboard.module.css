@@ -1,13 +1,23 @@
 .shell { min-height: 100dvh; }
 
+/* Solid background, no backdrop-filter: on iOS the blur also smeared the links.
+   The safe-area padding keeps the bar below the status bar in the installed app. */
 .nav {
   position: sticky; top: 0; z-index: 5;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  padding: 10px 16px; background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+  padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
+  background: var(--bg); border-bottom: 1px solid var(--line);
 }
+
+.skeleton { border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); animation: skel 1.2s ease-in-out infinite alternate; }
+@keyframes skel { from { opacity: 0.45; } to { opacity: 0.9; } }
 .navName { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .navLinks { display: flex; gap: 2px; flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .nav { gap: 6px; }
+  .navLinks { inline-size: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .navLinks :global(.btn) { padding: 8px 12px; min-height: 40px; white-space: nowrap; font-size: 0.95rem; }
+}
 
 .main { padding: 16px; max-width: 1280px; margin: 0 auto; display: grid; gap: 16px; }
 

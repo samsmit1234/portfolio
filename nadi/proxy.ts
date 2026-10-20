@@ -21,9 +21,10 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Verifies the JWT locally when the project uses asymmetric signing keys (no
+  // network call), refreshing the cookie when it has expired.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ?? null;
 
   const path = request.nextUrl.pathname;
   if (!user && path.startsWith("/dashboard")) {

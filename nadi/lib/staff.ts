@@ -11,10 +11,12 @@ import type { Restaurant, StaffRole } from "./types";
  */
 export const getStaffContext = cache(async () => {
   const supabase = await getServerSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // getClaims() verifies the session JWT locally (Supabase signing keys), so
+  // no round trip to the Auth server on every dashboard load. Row access is
+  // still enforced by RLS on every query below.
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims?.sub) redirect("/login");
+  const user = { id: data.claims.sub, email: (data.claims.email as string | undefined) ?? null };
 
   const membership = async () => {
     const { data, error } = await supabase

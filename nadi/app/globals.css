@@ -89,3 +89,8 @@ select.input { border-radius: 14px; }
   body:has(.qr-print) .qr-print, body:has(.qr-print) .qr-print * { visibility: visible; }
   body:has(.qr-print) .qr-print { position: absolute; inset: 0 0 auto 0; margin: 0 auto; }
 }
+
+.app-loading { min-height: 100dvh; display: grid; place-items: center; }
+.app-loading > * { animation: app-loading 1s ease-in-out infinite alternate; }
+@keyframes app-loading { from { opacity: 0.35; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .app-loading > * { animation: none; } }

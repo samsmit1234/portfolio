@@ -4,8 +4,11 @@ const MOCK = "http://localhost:54321";
 
 /** A Supabase session cookie the mock accepts (it never checks the token). */
 async function logIn(context: BrowserContext) {
+  const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
+  // HS256 token: getClaims() can't verify it locally and asks the (mock) Auth server.
+  const jwt = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub: "11111111-1111-1111-1111-111111111111", email: "chef@example.com", role: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })}.sig`;
   const session = {
-    access_token: "e2e",
+    access_token: jwt,
     refresh_token: "e2e",
     token_type: "bearer",
     expires_in: 3600,
@@ -46,14 +49,14 @@ test("staff creates an order, customer follows it, Ready reaches the customer", 
   const customer = await customerContext.newPage();
   await customer.goto(`/o/${order.id}`);
   await expect(customer.getByText("77", { exact: true })).toBeVisible();
-  await expect(customer.getByText("En préparation")).toBeVisible();
+  await expect(customer.getByText("En préparation", { exact: true })).toBeVisible();
 
   // Staff marks it ready; the customer page switches to the ready state on its own.
   await board.getByRole("button", { name: "Prête", exact: true }).click();
   await expect.poll(async () => (await (await fetch(`${MOCK}/__orders`)).json())[0].status).toBe("ready");
   // No Realtime in the mock: this exercises the 15 s polling fallback.
-  await expect(customer.getByText("Votre commande est prête")).toBeVisible({ timeout: 25_000 });
-  await expect(customer.getByText("En préparation")).toHaveCount(0);
+  await expect(customer.getByRole("heading", { name: "Votre commande est prête !" })).toBeVisible({ timeout: 25_000 });
+  await expect(customer.getByText("En préparation", { exact: true })).toHaveCount(0);
 
   await staff.close();
   await customerContext.close();
