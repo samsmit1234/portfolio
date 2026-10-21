@@ -4,7 +4,7 @@ import { getStaffContext } from "@/lib/staff";
 import { SettingsForm } from "./SettingsForm";
 import { TeamSection } from "./TeamSection";
 
-export const metadata: Metadata = { title: "Réglages" };
+export const metadata: Metadata = { title: { absolute: "Nadi" } };
 
 export default async function SettingsPage() {
   const { restaurant, isOwner, user } = await getStaffContext();

@@ -4,7 +4,8 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import type { Order } from "@/lib/types";
 import { OrdersBoard } from "./OrdersBoard";
 
-export const metadata: Metadata = { title: "Commandes" };
+// Plain "Nadi": browsers that add a home-screen shortcut name it after the page title.
+export const metadata: Metadata = { title: { absolute: "Nadi" } };
 
 const last24h = () => new Date(Date.now() - 24 * 3600 * 1000).toISOString();
 

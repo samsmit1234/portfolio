@@ -6,7 +6,7 @@ import { locale, t } from "@/lib/i18n";
 import { buildStats, hourlyFromOrders, type HourlyStat, type LiveOrder } from "@/lib/stats";
 import styles from "./stats.module.css";
 
-export const metadata: Metadata = { title: "Statistiques" };
+export const metadata: Metadata = { title: { absolute: "Nadi" } };
 
 const RANGES = [7, 30, 90];
 

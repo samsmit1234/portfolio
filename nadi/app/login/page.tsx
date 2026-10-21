@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { safeNext } from "@/lib/safeNext";
 import { LoginForm } from "./LoginForm";
 
-export const metadata: Metadata = { title: "Connexion" };
+// Plain "Nadi": browsers that add a home-screen shortcut name it after the page title.
+export const metadata: Metadata = { title: { absolute: "Nadi" } };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ e?: string; next?: string }> }) {
   const { e, next } = await searchParams;

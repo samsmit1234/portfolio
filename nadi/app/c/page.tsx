@@ -3,7 +3,7 @@ import { UUID_RE } from "@/lib/public";
 import { CustomerApp } from "./CustomerApp";
 
 export const metadata: Metadata = {
-  title: "Mes commandes",
+  title: { absolute: "Nadi" },
   robots: { index: false, follow: false },
   manifest: "/c/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Nadi", statusBarStyle: "default" },
